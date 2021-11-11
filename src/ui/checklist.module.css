@@ -1,0 +1,35 @@
+.root {
+    max-width: 56em;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    gap: 2em;
+    align-items: center;
+    justify-content: center;
+
+    font-family: 'inter';
+    font-weight: 100;
+    line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+    .root {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+    }
+}
+
+.node {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.check {
+    width: 68px;
+    height: 68px;
+    flex-shrink: 0;
+
+    background: url(/src/assets/graphics/check.png) center center no-repeat;
+    background-size: cover;
+}

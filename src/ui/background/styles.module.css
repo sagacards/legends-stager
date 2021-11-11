@@ -1,0 +1,165 @@
+.root {
+    position: relative;
+
+    text-shadow: 0 0 25px #FFFDD5;
+
+    width: 100%; height: 100%;
+}
+
+.backdrop {
+    overflow: hidden;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+
+    background-size: cover;
+    background-position: top center;
+    background-repeat: no-repeat;
+
+    opacity: 0;
+}
+
+.loaded .backdrop {
+    opacity: 1;
+    transition: opacity 1s ease-out;
+}
+
+.foreground {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+}
+
+.fade + .foreground {
+    text-shadow: 0 0 25px rgba(0, 0, 0, .5);
+}
+
+.fade {
+    position: absolute;
+    z-index: 1;
+
+    width: 100%;
+    height: 100%;
+
+    background-image: 
+        linear-gradient(to bottom, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 1) 100%);
+}
+
+.dawn {
+    background-color: var(--colour-backdrop-dawn-1);
+}
+
+.day {
+    background-color: var(--colour-backdrop-day-1);
+}
+
+.dusk {
+    background-color: var(--colour-backdrop-dusk-1);
+}
+
+.night {
+    background-color: var(--colour-backdrop-night-1);
+}
+
+@media (max-width: 768px) {
+    .fjord.dawn .backdrop {
+        background-image: url(/src/assets/backdrops/1k/dawn.webp);
+    }
+
+    .fjord.day .backdrop {
+        background-image: url(/src/assets/backdrops/1k/day.webp);
+    }
+
+    .fjord.dusk .backdrop {
+        background-image: url(/src/assets/backdrops/1k/dusk.webp);
+    }
+
+    .fjord.night .backdrop {
+        background-image: url(/src/assets/backdrops/1k/night.webp);
+    }
+
+    .fjord-centered.dawn .backdrop {
+        background-image: url(/src/assets/backdrops/1k/centered-dawn.webp);
+    }
+
+    .fjord-centered.day .backdrop {
+        background-image: url(/src/assets/backdrops/1k/centered-day.webp);
+    }
+
+    .fjord-centered.dusk .backdrop {
+        background-image: url(/src/assets/backdrops/1k/centered-dusk.webp);
+    }
+
+    .fjord-centered.night .backdrop {
+        background-image: url(/src/assets/backdrops/1k/centered-night.webp);
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1440px) {
+    .fjord.dawn .backdrop {
+        background-image: url(/src/assets/backdrops/2k/dawn.webp);
+    }
+
+    .fjord.day .backdrop {
+        background-image: url(/src/assets/backdrops/2k/day.webp);
+    }
+
+    .fjord.dusk .backdrop {
+        background-image: url(/src/assets/backdrops/2k/dusk.webp);
+    }
+
+    .fjord.night .backdrop {
+        background-image: url(/src/assets/backdrops/2k/night.webp);
+    }
+
+    .fjord-centered.dawn .backdrop {
+        background-image: url(/src/assets/backdrops/2k/centered-dawn.webp);
+    }
+
+    .fjord-centered.day .backdrop {
+        background-image: url(/src/assets/backdrops/2k/centered-day.webp);
+    }
+
+    .fjord-centered.dusk .backdrop {
+        background-image: url(/src/assets/backdrops/2k/centered-dusk.webp);
+    }
+
+    .fjord-centered.night .backdrop {
+        background-image: url(/src/assets/backdrops/2k/centered-night.webp);
+    }
+}
+
+@media (min-width: 1441px) {
+    .fjord.dawn .backdrop {
+        background-image: url(/src/assets/backdrops/4k/dawn.webp);
+    }
+
+    .fjord.day .backdrop {
+        background-image: url(/src/assets/backdrops/4k/day.webp);
+    }
+
+    .fjord.dusk .backdrop {
+        background-image: url(/src/assets/backdrops/4k/dusk.webp);
+    }
+
+    .fjord.night .backdrop {
+        background-image: url(/src/assets/backdrops/4k/night.webp);
+    }
+
+    .fjord-centered.dawn .backdrop {
+        background-image: url(/src/assets/backdrops/4k/centered-dawn.webp);
+    }
+
+    .fjord-centered.day .backdrop {
+        background-image: url(/src/assets/backdrops/4k/centered-day.webp);
+    }
+
+    .fjord-centered.dusk .backdrop {
+        background-image: url(/src/assets/backdrops/4k/centered-dusk.webp);
+    }
+
+    .fjord-centered.night .backdrop {
+        background-image: url(/src/assets/backdrops/4k/centered-night.webp);
+    }
+}

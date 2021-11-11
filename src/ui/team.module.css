@@ -1,0 +1,43 @@
+.root {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 3em;
+    max-width: 70em;
+}
+
+.member {
+    width: 16em;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    line-height: 1;
+}
+
+.photo {
+    width: 16em;
+    height: 16em;
+    background: rgba(255, 255, 255, .1);
+    box-shadow:
+        0 0 10px hsla(50deg, 70%, 50%, 1),
+        0 0 0 2px hsla(25deg, 73%, 60%, 1);
+    border-radius: 20px;
+}
+
+.name {
+    font-size: var(--typescale-4);
+}
+
+.title {
+    /* font-style: italic; */
+    font-size: var(--typescale-2);
+    font-family: inter;
+    font-weight: bold;
+}
+
+.bio {
+    font-size: var(--typescale-2);
+    font-family: inter;
+    line-height: 1.75;
+}

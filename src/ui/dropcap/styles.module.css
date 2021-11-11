@@ -1,0 +1,17 @@
+.root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    float: left;
+    height: 1.25em;
+    width: 1.25em;
+    margin: 0 .2em 0 0;
+    padding: .125em;
+
+    background: black;
+    box-shadow: 0 0 0 2px white;
+
+    font-family: 'Uncial Antiqua';
+    font-size: 2em;
+    line-height: 1;
+}

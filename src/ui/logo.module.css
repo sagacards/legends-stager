@@ -1,0 +1,23 @@
+.root {
+    display: flex;
+    gap: 1em;
+    align-items: center;
+    justify-content: center;
+}
+
+.word {
+    color: rgba(255, 255, 255, .5);
+    font-family: 'Astloch';
+    font-size: var(--typescale-6);
+    /* font-weight: bold; */
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: white;
+}
+
+.logo {
+    width: 88px;
+    height: 88px;
+    background: rgba(255, 255, 255, .5);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 1);
+}

@@ -1,0 +1,21 @@
+.root {
+    display: flex;
+    justify-content: space-around;
+    gap: 1em;
+    overflow-x: hidden;
+    
+    width: 100%;
+    padding: .25em 0;
+
+    background: rgba(0, 0, 0, .3);
+    border: none 1px rgba(255, 255, 255, .1);
+    border-top-style: solid;
+    border-bottom-style: solid;
+
+    color: rgba(255, 255, 255, .1);
+    font-size: var(--typescale-5);
+    text-shadow: 0 0 15px #7CD8FF;
+
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: #DAF8FF;
+}

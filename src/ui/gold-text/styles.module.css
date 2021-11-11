@@ -1,0 +1,41 @@
+.root {
+    position: relative;
+}
+
+.fore {
+    position: relative;
+    z-index: 1;
+
+    font-family: 'Almendra';
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: hsla(50deg, 70%, 50%, 1);
+    -webkit-text-fill-color: transparent;
+
+    background:
+        linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0)),
+        linear-gradient(hsla(42deg, 100%, 70%, 1), hsla(25deg, 73%, 60%, 1)),
+        url(/src/assets/graphics/noise.webp) repeat;
+        background-size: 150%;
+        background-blend-mode: color;
+        -webkit-background-clip: text;
+        
+    color: hsla(25deg, 73%, 60%, 1);
+    font-weight: normal;
+    text-shadow: none;
+    
+    filter: brightness(1.25);
+}
+
+.back {
+    position: absolute;
+    z-index: 0;
+    top: 0; left: 0;
+
+    color: rgb(255, 208, 97);
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: hsla(50deg, 70%, 50%, 1);
+}
+
+.bright {
+    filter: brightness(1.75);
+}
