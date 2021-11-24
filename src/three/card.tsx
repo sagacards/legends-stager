@@ -31,7 +31,7 @@ export function Loader () {
 
     return <mesh ref={mesh}>
         <torusGeometry args={[.5, .1, 10, 25]} />
-        <meshStandardMaterial color="white" />
+        <meshStandardMaterial color="#121212" />
     </mesh>
 }
 

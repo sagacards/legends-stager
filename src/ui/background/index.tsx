@@ -2,14 +2,12 @@ import React from 'react';
 import Styles from './styles.module.css';
 
 interface Props {
-    image?: 'none' | 'fjord' | 'fjord-centered';
     time: 'dawn' | 'day' | 'dusk'| 'night';
     fade?: boolean;
     children?: React.ReactNode;
 };
 
 export default function Background ({
-    image = 'none',
     time,
     fade,
     ...props
@@ -30,7 +28,7 @@ export default function Background ({
         imageLoader.src = image;
     }, [ref]);
 
-    return <div className={[Styles.root, Styles[image], Styles[time], loaded ? Styles['loaded'] : ''].join(' ')}>
+    return <div className={[Styles.root, Styles[time], loaded ? Styles['loaded'] : ''].join(' ')}>
         <div className={Styles.backdrop} ref={ref} />
         {fade && <div className={Styles.fade} />}
         <div className={Styles.foreground}>

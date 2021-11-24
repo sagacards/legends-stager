@@ -8,17 +8,19 @@
   },
   "dependencies": {
     "@react-spring/three": "^9.3.0",
+    "@react-spring/web": "^9.3.0",
     "@react-three/fiber": "^7.0.19",
-    "@react-three/postprocessing": "^2.0.5",
     "leva": "^0.9.14",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
-    "three": "^0.134.0",
-    "zustand": "^3.6.5"
+    "react-router-dom": "^6.0.2",
+    "styled-components": "^5.3.3",
+    "three": "^0.134.0"
   },
   "devDependencies": {
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
+    "@types/styled-components": "^5.1.15",
     "@types/three": "^0.134.0",
     "@vitejs/plugin-react": "^1.0.0",
     "typescript": "^4.3.2",

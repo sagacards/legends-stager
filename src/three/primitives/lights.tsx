@@ -1,6 +1,5 @@
 import React from 'react';
 import * as THREE from 'three';
-import useStore from 'src/store';
 
 const atmospheres = [
     <hemisphereLight args={["#D29B36", "#E8D66B"]} intensity={1} />,
@@ -9,18 +8,12 @@ const atmospheres = [
     <hemisphereLight args={["#853AFF", "#0098ED"]} intensity={1} />
 ];
 
-export function Atmosphere () {
-    const { time } = useStore();
-    return atmospheres[time]
-}
-
 const center = new THREE.Object3D();
 center.position.x = 0;
 center.position.y = 0;
 center.position.z = 0;
 
 export function Sun () {
-    const { time } = useStore();
     return <>
         <directionalLight
             intensity={.5}
@@ -39,12 +32,47 @@ export function Sun () {
         />
         <directionalLight
             intensity={.125}
-            position={[1, 1, 1]}
+            position={[1, 3, 1]}
             target={center}
         />
         <directionalLight
             intensity={.125}
-            position={[-1, 1, 1]}
+            position={[-1, 3, 1]}
+            target={center}
+        />
+        <directionalLight
+            intensity={.25}
+            position={[1, 0, 0]}
+            target={center}
+        />
+        <directionalLight
+            intensity={.25}
+            position={[-1, 0, 0]}
+            target={center}
+        />
+    </>
+}
+
+export function SideBySide () {
+    return <>
+        <directionalLight
+            position={[5, -2.5, 6]}
+            intensity={.25}
+            target={center}
+        />
+        <directionalLight
+            position={[5, 2.5, 6]}
+            intensity={.125}
+            target={center}
+        />
+        <directionalLight
+            position={[-5, -1.5, 3]}
+            intensity={.25}
+            target={center}
+        />
+        <directionalLight
+            position={[-5, 1.5, 3]}
+            intensity={.25}
             target={center}
         />
     </>

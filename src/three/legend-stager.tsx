@@ -12,9 +12,6 @@ import { useSpring, animated, useSpringRef } from "@react-spring/three";
 import { useControls } from 'leva';
 
 import {
-    useLegendBack,
-    useLegendBorder,
-    useLegendColors,
     useLegendNormal,
     useTheFoolLayers
 } from 'three/primitives/textures';
@@ -41,6 +38,54 @@ const d = [2681, 4191]; // Dimensions of the art assets
 const e = 1.41 / 1000; // Factor to normalize art assets to tarot card dimensions
 const f = [2.75, 4.75]; // Tarot card dimensions
 
+const colors = [
+    [
+        'Copper',
+        "#000000",
+        "#4e230a",
+        "#a78319",
+    ],
+    [
+        'Silver',
+        "#33343b",
+        "#3f484e",
+        "#a7bcc4",
+    ],
+    [
+        'Gold',
+        "#764007",
+        "#873d00",
+        "#c4a42f",
+    ],
+    [
+        'Canopy',
+        "#3a3e39",
+        "#57b44b",
+        "#424800",
+    ],
+    [
+        'Rose',
+        "#524f32",
+        "#4b0000",
+        "#ff00ee",
+    ],
+    [
+        'Spice',
+        "#341414",
+        "#620909",
+        "#b40000",
+    ],
+    [
+        'Midnight',
+        "#191224",
+        "#7239aa",
+        "#00536c",
+    ],
+];
+
+let colorBase = new THREE.Color(colors[0][1]).convertSRGBToLinear();
+let colorSpecular = new THREE.Color(colors[0][2]).convertSRGBToLinear();
+let colorEmissive = new THREE.Color(colors[0][3]).convertSRGBToLinear();
 
 // Layers comprising the card face, layed out on the Z axis.
 function CardArt(props: {textures: THREE.Texture[]}) {
@@ -63,7 +108,41 @@ function CardArt(props: {textures: THREE.Texture[]}) {
 
 // The main card mesh.
 function CardMesh({ texture }: { texture: THREE.Texture }) {
-    const [colorBase, colorSpecular, colorEmissive] = React.useMemo(useLegendColors, []);
+    const [{ preset, base, emissive, specular }, setColors] = useControls('Ink Color', () => ({
+        name: {
+            value: "",
+            disabled: true,
+        },
+        preset: {
+            value: 0,
+            min: 0,
+            max: colors.length - 1,
+            step: 1,
+            label: 'ink',
+        },
+        base: {
+            value: colors[0][1],
+        },
+        specular: {
+            value: colors[0][2],
+        },
+        emissive: {
+            value: colors[0][3],
+        },
+    }));
+    React.useEffect(() => {
+        setColors({
+            name: colors[preset][0],
+            base: colors[preset][1],
+            specular: colors[preset][2],
+            emissive: colors[preset][3],
+        });
+    }, [preset]);
+    React.useEffect(() => {
+        colorBase = new THREE.Color(base).convertSRGBToLinear();
+        colorEmissive = new THREE.Color(emissive).convertSRGBToLinear();
+        colorSpecular = new THREE.Color(specular).convertSRGBToLinear();
+    }, [base, emissive, specular, preset]);
     const normal = React.useMemo(() => useLegendNormal(), []);
     return (
         <Card
@@ -94,13 +173,11 @@ function CardMesh({ texture }: { texture: THREE.Texture }) {
                     colorBase={colorBase}
                     colorEmissive={colorEmissive}
                     colorSpecular={colorSpecular}
-                    texture={useLegendBorder()}
                 />
                 <CardBackInk
                     colorBase={colorBase}
                     colorEmissive={colorEmissive}
                     colorSpecular={colorSpecular}
-                    texture={useLegendBack()}
                 />
             </>}
         />
@@ -124,7 +201,7 @@ function LegendCard({ rotation, ...props }: LegendCardProps) {
         if (!document.hasFocus()) return null;
 
         // Rotate the card
-        mesh.current.rotation.y = state.clock.getElapsedTime() * .3;
+        mesh.current.rotation.y = Math.PI //state.clock.getElapsedTime() * .3;
 
         // Position camera
         const ry = mesh.current.rotation.y % Math.PI;
@@ -230,11 +307,11 @@ export function LegendPreview() {
         }
 
         // Dynamically set pixel density based on performance
-        if (state.performance.current < 1) {
-            state.setDpr(1);
-        } else {
-            state.setDpr(window.devicePixelRatio);
-        }
+        // if (state.performance.current < 1) {
+        //     state.setDpr(1);
+        // } else {
+        //     state.setDpr(window.devicePixelRatio);
+        // }
 
         spring.start({
             rotation: ([
@@ -261,7 +338,7 @@ export default function LegendPreviewCanvas() {
     return (
         <div className="canvasContainer" style={{width: '100%', height: '100%'}}>
             <Canvas
-                dpr={dpr.current}
+                dpr={4}
                 camera={{ zoom: 1 }}
                 performance={{ min: .1, max: 1, debounce: 10000}}
                 mode="concurrent"
