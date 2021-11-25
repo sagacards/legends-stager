@@ -16,11 +16,11 @@ import CardBorder6 from 'assets/textures/borders/1k/greek.webp';
 import CardBorder7 from 'assets/textures/borders/1k/saxon-shaded.webp';
 import CardBorder8 from 'assets/textures/borders/1k/saxon.webp';
 
-import FoolLayerA from 'assets/textures/cards/1k/0-the-fool/a.webp';
-import FoolLayerB from 'assets/textures/cards/1k/0-the-fool/b.webp';
-import FoolLayerC from 'assets/textures/cards/1k/0-the-fool/c.webp';
-import FoolLayerD from 'assets/textures/cards/1k/0-the-fool/d.webp';
-import FoolLayerE from 'assets/textures/cards/1k/0-the-fool/e.webp';
+import FoolLayerA from 'assets/textures/cards/4k/0-the-fool/a.webp';
+import FoolLayerB from 'assets/textures/cards/4k/0-the-fool/b.webp';
+import FoolLayerC from 'assets/textures/cards/4k/0-the-fool/c.webp';
+import FoolLayerD from 'assets/textures/cards/4k/0-the-fool/d.webp';
+import FoolLayerE from 'assets/textures/cards/4k/0-the-fool/e.webp';
 import FoolFlat from 'assets/textures/cards/complete-cropped.webp';
 import FoolBG from 'assets/textures/cards/1k/0-the-fool/bg.webp';
 

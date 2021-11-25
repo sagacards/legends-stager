@@ -188,7 +188,7 @@ interface LegendCardProps extends GroupProps {
 }
 
 // Renders card art onto card mesh using default camera and a portal to create the depth effect.
-function LegendCard({ rotation, ...props }: LegendCardProps) {
+export function LegendCard({ rotation, ...props }: LegendCardProps) {
     const scene = React.useRef(new THREE.Scene());
     const target = React.useRef(new THREE.WebGLRenderTarget(d[0], d[1]));
     const camera = React.useRef(
@@ -198,19 +198,19 @@ function LegendCard({ rotation, ...props }: LegendCardProps) {
     React.useEffect(() => void (camera.current.position.z = 20), []);
     useFrame((state) => {
         if (!mesh.current) return;
-        if (!document.hasFocus()) return null;
 
         // Rotate the card
-        mesh.current.rotation.y = Math.PI //state.clock.getElapsedTime() * .3;
+        // mesh.current.rotation.y = rotation ? rotation['y'] : 0;
 
         // Position camera
-        const ry = mesh.current.rotation.y % Math.PI;
+        // @ts-ignore
+        const ry = rotation[1] % Math.PI;
         const cy = THREE.MathUtils.clamp(
             ry > Math.PI / 2 ? ry - Math.PI : ry,
             -Math.PI,
             Math.PI
         ) / Math.PI;
-        camera.current.position.x = -cy * 4 / 2;
+        camera.current.position.x = -cy * 3.5 / 2;
         camera.current.lookAt(0, 0, 0);
 
         // Render
@@ -219,7 +219,7 @@ function LegendCard({ rotation, ...props }: LegendCardProps) {
         state.gl.setRenderTarget(null);
     });
     return (
-        <animated.group {...props} ref={mesh}>
+        <animated.group {...props} ref={mesh} rotation={rotation}>
             {createPortal(<CardArt textures={useTheFoolLayers()} />, scene.current)}
             <CardMesh texture={target.current.texture} />
         </animated.group>
@@ -319,7 +319,7 @@ export function LegendPreview() {
                 0 - THREE.MathUtils.degToRad(mouse.current.x * 5),
                 0
             ] as unknown) as THREE.Vector3,
-            position: ([0, 0, mouse.current.hover ? 0.1 : 0] as unknown) as THREE.Euler,
+            position: ([0, 0, .5] as unknown) as THREE.Euler,
             config: {
                 mass: 30,
                 tension: 300,
@@ -338,7 +338,7 @@ export default function LegendPreviewCanvas() {
     return (
         <div className="canvasContainer" style={{width: '100%', height: '100%'}}>
             <Canvas
-                dpr={4}
+                dpr={2}
                 camera={{ zoom: 1 }}
                 performance={{ min: .1, max: 1, debounce: 10000}}
                 mode="concurrent"

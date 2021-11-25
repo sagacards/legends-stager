@@ -242,7 +242,7 @@ export function LegendPreview() {
                 0 - THREE.MathUtils.degToRad(mouse.current.x * 5),
                 0
             ] as unknown) as THREE.Vector3,
-            position: ([0, 0, mouse.current.hover ? 0.1 : 0] as unknown) as THREE.Euler,
+            position: ([0, 0, .5] as unknown) as THREE.Euler,
             config: {
                 mass: 30,
                 tension: 300,
