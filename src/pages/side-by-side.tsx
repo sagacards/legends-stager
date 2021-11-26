@@ -10,6 +10,7 @@ import { borderNames, CardBorderInk } from 'three/border-ink';
 import { backNames, CardBackInk } from 'three/back-ink';
 import { Leva, useControls } from 'leva';
 import colors from 'src/colors';
+import variants from 'src/variants';
 
 let colorBase = new THREE.Color(colors[0][1]).convertSRGBToLinear();
 let colorSpecular = new THREE.Color(colors[0][2]).convertSRGBToLinear();
@@ -97,7 +98,7 @@ function View () {
 
     async function delay () {
         return new Promise<any>((resolve) => {
-            setTimeout(() => resolve(true), 100);
+            setTimeout(() => resolve(true), 250);
         });
     }
 
@@ -122,7 +123,6 @@ function View () {
 
     async function exportAll () {
         let [i, j, k] = [0, 0, 0];
-        const saved : { [key: string]: boolean } = {};
         for (const back of backs) {
             j = k = 0;
             const backName = backNames[i].toLowerCase();
@@ -138,12 +138,10 @@ function View () {
                     const inkName = colors[k][0].toLowerCase();
                     const name = `preview-side-by-side-${backName}-${borderName}-${inkName}.png`;
                     k++;
-                    if (!saved[name]) {
-                        console.log(name)
-                        console.log(i, j, k)
+                    if (variants.includes(`${borderName}-${backName}-${inkName}`)) {
+                        console.log(`render ${borderName}-${backName}-${inkName}`);
                         await saveImage(name);
-                        saved[name] = true;
-                    };
+                    }
                 };
             };
         };

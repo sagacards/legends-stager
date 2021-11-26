@@ -10,6 +10,11 @@ import { backNames } from 'three/back-ink';
 import { Leva, useControls } from 'leva';
 import colors from 'src/colors';
 import { LegendCard } from 'three/legend-stager';
+//@ts-ignore
+import WebMWriter from 'webm-writer';
+//@ts-ignore
+import download from 'downloadjs';
+import variants from 'src/variants';
 
 let colorBase = new THREE.Color(colors[0][1]).convertSRGBToLinear();
 let colorSpecular = new THREE.Color(colors[0][2]).convertSRGBToLinear();
@@ -76,9 +81,9 @@ function View({ canvas }: { canvas: HTMLCanvasElement | null }) {
         },
     }));
 
-    // useFrame(({ gl, scene, camera }) => {
-    //     gl.render(scene, camera)
-    // }, 1);
+    useFrame(({ gl, scene, camera }) => {
+        gl.render(scene, camera)
+    }, 1);
 
     React.useEffect(() => {
         setColors({
@@ -97,6 +102,7 @@ function View({ canvas }: { canvas: HTMLCanvasElement | null }) {
 
     React.useEffect(() => {
         scene.background = new THREE.Color('#000');
+        gl.domElement.getContext('webgl', { preserveDrawingBuffer: true });
     }, []);
 
     const [rotation, setRotation] = React.useState<[number, number, number]>([0, 0, 0])
@@ -106,66 +112,45 @@ function View({ canvas }: { canvas: HTMLCanvasElement | null }) {
             setTimeout(() => resolve(true), t);
         });
     }
-
-    // @ts-ignore
-    const capturer = React.useRef<any>();
-
-    gl.domElement.getContext('webgl', { preserveDrawingBuffer: true });
+    
     const i = React.useRef(0);
-    const capturing = React.useRef(false);
-    const resolver = React.useRef();
-
+    const resolver = React.useRef<() => void>();
     const frames = 60 * 12;
-
-    useFrame(state => {
-        setRotation([0, Math.PI * 2 * (i.current / frames), 0]);
-        gl.render(scene, camera);
-        if (capturing.current === true) {
-            i.current++;
-            capturer.current.capture(canvas);
-            if (i.current === frames) {
-                console.log('Done');
-                capturing.current = false;
-                // @ts-ignore
-                capturer.current.stop();
-                // @ts-ignore
-                capturer.current.save();
-                // @ts-ignore
-                resolver.current();
-            };
-        }
-    });
 
     async function saveImage(name : string) {
         if (!canvas) return;
-
-        console.log(`Rendering ${frames} frames...`);
-
-        //@ts-ignore
-        capturer.current = new CCapture( {
-            format: 'webm',
-            quality: 75,
-            framerate: 30,
-            name
-        } )
-
-        i.current = 0;
-        requestAnimationFrame(() => gl.render(scene, camera));
-        await delay(250);
-        capturer.current.start();
-        gl.render(scene, camera)
-        capturer.current.capture(canvas);
-        capturing.current = true;
-
-        return new Promise((resolve) => {
-            // @ts-ignore
-            resolver.current = resolve;
+        const start = new Date();
+        console.log(`${start.toLocaleTimeString()} Rendering ${frames} frames...`);
+        const capturer = new WebMWriter({
+            quality: 0.75,
+            frameRate: 30,
         });
+        i.current = 0;
+        
+        function render () {
+            gl.render(scene, camera);
+            setRotation([0, Math.PI * 2 * (i.current / frames), 0]);
+            new Promise(() => capturer.addFrame(canvas));
+            i.current++;
+            if (i.current < frames) {
+                requestAnimationFrame(render);
+            } else {
+                capturer.complete()
+                .then(function(blob : any) {
+                    download(blob, name, 'video/webm');
+                });;
+                console.log(`Done. Took ${(new Date().getTime() - start.getTime()) / 1000} seconds.`)
+                if (resolver.current) resolver.current();
+            }
+        }
+
+        render();
+
+        return new Promise<void>(resolve => resolver.current = resolve);
     }
 
     async function exportAll() {
         let [i, j, k] = [0, 0, 0];
-        const saved: { [key: string]: boolean } = {};
         for (const back of backs) {
             j = k = 0;
             const backName = backNames[i].toLowerCase();
@@ -179,13 +164,11 @@ function View({ canvas }: { canvas: HTMLCanvasElement | null }) {
                 for (const color of colors) {
                     setColors({ preset: k });
                     const inkName = colors[k][0].toLowerCase();
-                    const name = `preview-animated-${backName}-${borderName}-${inkName}`;
+                    if (variants.includes(`${borderName}-${backName}-${inkName}`)) {
+                        console.log(`render ${backName}-${borderName}-${inkName}`);
+                        await saveImage(`preview-animated-${backName}-${borderName}-${inkName}`);
+                    }
                     k++;
-                    if (!saved[name]) {
-                        console.log(name)
-                        console.log(i, j, k)
-                        await saveImage(name);
-                    };
                 };
             };
         };

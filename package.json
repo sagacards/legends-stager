@@ -11,12 +11,14 @@
     "@react-spring/web": "^9.3.0",
     "@react-three/fiber": "^7.0.19",
     "ccapture.js": "^1.1.0",
+    "downloadjs": "^1.4.7",
     "leva": "^0.9.14",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-router-dom": "^6.0.2",
     "styled-components": "^5.3.3",
-    "three": "^0.134.0"
+    "three": "^0.134.0",
+    "webm-writer": "^1.0.0"
   },
   "devDependencies": {
     "@types/ccapture.js": "^1.1.1",
