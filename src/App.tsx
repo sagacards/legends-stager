@@ -9,6 +9,7 @@ import {
 import SideBySidePage from 'pages/side-by-side';
 import StagerPage from 'pages/stager';
 import AnimatedPage from 'pages/animated';
+import TestPage from 'pages/test';
 
 export default function App() {
     return <Router>
@@ -16,6 +17,7 @@ export default function App() {
             <Route path="/stager" element={<StagerPage />} />
             <Route path="/side-by-side" element={<SideBySidePage />} />
             <Route path="/animated" element={<AnimatedPage />} />
+            <Route path="/test" element={<TestPage />} />
             <Route path="/" element={<IndexPage />} />
         </Routes>
     </Router>
