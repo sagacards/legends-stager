@@ -121,24 +121,26 @@ function View({ canvas }: { canvas: HTMLCanvasElement | null }) {
         if (!canvas) return;
         const start = new Date();
         console.log(`${start.toLocaleTimeString()} Rendering ${frames} frames...`);
+        
         const capturer = new WebMWriter({
             quality: 0.75,
             frameRate: 30,
         });
-        i.current = 0;
+
+        i.current = -60;
         
         function render () {
-            gl.render(scene, camera);
             setRotation([0, Math.PI * 2 * (i.current / frames), 0]);
-            new Promise(() => capturer.addFrame(canvas));
+            gl.render(scene, camera);
             i.current++;
+            if (i.current >= 0) capturer.addFrame(canvas);
             if (i.current < frames) {
                 requestAnimationFrame(render);
             } else {
                 capturer.complete()
                 .then(function(blob : any) {
                     download(blob, name, 'video/webm');
-                });;
+                });
                 console.log(`Done. Took ${(new Date().getTime() - start.getTime()) / 1000} seconds.`)
                 if (resolver.current) resolver.current();
             }
@@ -166,7 +168,6 @@ function View({ canvas }: { canvas: HTMLCanvasElement | null }) {
                     const inkName = colors[k][0].toLowerCase();
                     if (variants.includes(`${borderName}-${backName}-${inkName}`)) {
                         console.log(`render ${backName}-${borderName}-${inkName}`);
-			gl.render(scene, camera);
                         await saveImage(`preview-animated-${backName}-${borderName}-${inkName}`);
                     }
                     k++;

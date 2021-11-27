@@ -7,7 +7,7 @@ export default function TestPage () {
         const manifest = await (await fetch(`http://rwlgt-iiaaa-aaaaa-aaaaa-cai.localhost:8000/legend-manifest/${i}`)).json();
         return <>
             <h1>{manifest.back} {manifest.border} {manifest.ink}</h1>
-            <img src={`http://rwlgt-iiaaa-aaaaa-aaaaa-cai.localhost:8000/side-by-side-preview/${i}`} />
+            <img src={`https://nges7-giaaa-aaaaj-qaiya-cai.raw.ic0.app/side-by-side-preview/${i}`} />
             <br />
             <hr />
         </>;
