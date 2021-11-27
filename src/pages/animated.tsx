@@ -166,6 +166,7 @@ function View({ canvas }: { canvas: HTMLCanvasElement | null }) {
                     const inkName = colors[k][0].toLowerCase();
                     if (variants.includes(`${borderName}-${backName}-${inkName}`)) {
                         console.log(`render ${backName}-${borderName}-${inkName}`);
+			gl.render(scene, camera);
                         await saveImage(`preview-animated-${backName}-${borderName}-${inkName}`);
                     }
                     k++;

@@ -242,7 +242,7 @@ export default function SideBySidePage () {
             collapsed
         />
         <div style={{width: '100vw', height: '100vh', overflow: 'hidden'}}>
-                <div style={{width: '100%', height: '100%'}}>
+                <div style={{width: '1000px', height: '1000px'}}>
                     <Canvas ref={ref} dpr={2}>
                         <React.Suspense fallback={<></>}>
                             <View />
