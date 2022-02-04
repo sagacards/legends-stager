@@ -7,6 +7,7 @@ import useLegendManifest, { host } from 'hooks/legend-manifest';
 import Normal from 'art/common/normal.webp';
 import FoolFlat from 'art/0-the-fool/fool-flat.webp';
 import MagicianFlat from 'art/1-the-magician/magician-flat.webp';
+import { Texture } from 'src/store';
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
 const Fool = import.meta.glob('/src/art/0-the-fool/fool-layer-*.webp');
@@ -49,7 +50,8 @@ export function useCardBacks() {
 };
 
 export function useCardBorders() {
-    return useArt(Borders);
+    const art = useArt(Borders);
+    return art
 };
 
 export function useTheFoolLayers() {
@@ -68,10 +70,10 @@ export function useTheMagicianFlat() {
     return useLoader(THREE.TextureLoader, MagicianFlat);
 }
 
-export function useArt (modules : Record<string, () => Promise<{ [key: string]: any; }>>) : [THREE.Texture, string][] {
+export function useArt (modules : Record<string, () => Promise<{ [key: string]: any; }>>) : Texture[] {
     return React.useMemo(() => Object.entries(modules)
         .map(([path], i) => [useLoader(THREE.TextureLoader, path), (path.match(/\/([a-z0-9\-]+)\./) as string[])[1], i])
         .sort((a, b) => (a[1] as number) - (b[1] as number))
-        .map(x => [x[0], x[1]]) as [THREE.Texture, string][]
+        .map(x => ({ texture: x[0], name: x[1]})) as Texture[]
     , []);
 }

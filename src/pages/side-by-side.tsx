@@ -8,7 +8,7 @@ import Card from 'three/card';
 import { useCardBacks, useCardBorders, useLegendNormal, useTheMagicianFlat } from 'three/primitives/textures';
 import CardInk from 'three/ink';
 import { Leva, useControls, button, buttonGroup } from 'leva';
-import colors from 'three/primitives/colors';
+import colors from 'src/colors';
 import variants from 'src/variants';
 
 let _colors = colors;

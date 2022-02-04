@@ -21,13 +21,13 @@ export default function CardInk({
     specular,
     side,
 } : Props) {
-    const [[border]] = useCardBorders();
+    const [border] = useCardBorders();
     return (
         <>
             <mesh position={[0, 0, 0.0265 * (side === THREE.BackSide ? -1 : 1)]}>
                 <planeGeometry args={[2.75, 4.75]} />
                 <meshPhongMaterial
-                    alphaMap={alpha || border}
+                    alphaMap={alpha || border.texture}
                     transparent={true}
                     color={color}
                     emissive={emissive}
