@@ -5,27 +5,38 @@ import {
 } from '@react-three/fiber';
 import { SideBySide } from 'three/primitives/lights';
 import Card from 'three/card';
-import { useCardBacks, useCardBorders, useLegendNormal, useTheFoolLayers } from 'three/primitives/textures';
-import { borderNames, CardBorderInk } from 'three/border-ink';
-import { backNames, CardBackInk } from 'three/back-ink';
-import { Leva, useControls } from 'leva';
+import { useCardBacks, useCardBorders, useLegendNormal, useTheMagicianFlat } from 'three/primitives/textures';
+import CardInk from 'three/ink';
+import { Leva, useControls, button, buttonGroup } from 'leva';
 import colors from 'src/colors';
 import variants from 'src/variants';
 
-let colorBase = new THREE.Color(colors[0][1]).convertSRGBToLinear();
-let colorSpecular = new THREE.Color(colors[0][2]).convertSRGBToLinear();
-let colorEmissive = new THREE.Color(colors[0][3]).convertSRGBToLinear();
+let _colors = colors;
+
+let colorBase = new THREE.Color(_colors[0][1]).convertSRGBToLinear();
+let colorSpecular = new THREE.Color(_colors[0][2]).convertSRGBToLinear();
+let colorEmissive = new THREE.Color(_colors[0][3]).convertSRGBToLinear();
 
 function View () {
     
     const {
-        gl,                           // WebGL renderer
-        scene,                        // Default scene
-        camera,                       // Default camera
+        gl,     // WebGL renderer
+        scene,  // Default scene
+        camera, // Default camera
     } = useThree();
 
+    // @ts-ignore
+    const [viewMode, setViewMode] = useControls('View Mode', () => ({
+        Mode: 'Side-by-side',
+        ' ': buttonGroup({
+            'Side-by-side': () => setViewMode({ Mode: 'Side-by-side' }),
+            'Animated': () => setViewMode({ Mode: 'Animated' }),
+            'Free': () => setViewMode({ Mode: 'Free' }),
+        })
+    }));
+
     const backs = useCardBacks();
-    const [, setBack] = useControls('Ink Patterns', () => ({
+    const [{back : backI}, setBack] = useControls('Ink Patterns', () => ({
         back: {
             value: 0,
             step: 1,
@@ -40,7 +51,7 @@ function View () {
     }));
 
     const borders = useCardBorders();
-    const [, setBorder] = useControls('Ink Patterns', () => ({
+    const [{border : borderI}, setBorder] = useControls('Ink Patterns', () => ({
         border: {
             value: 0,
             step: 1,
@@ -54,7 +65,7 @@ function View () {
         },
     }));
 
-    const [{ preset, name : inkName }, setColors] = useControls('Ink Color', () => ({
+    const [{ preset, name : inkName, base, specular, emissive }, setColors] = useControls('Ink Color', () => ({
         name: {
             value: "",
             disabled: true,
@@ -62,39 +73,59 @@ function View () {
         preset: {
             value: 0,
             min: 0,
-            max: colors.length - 1,
+            max: _colors.length - 1,
             step: 1,
             label: 'ink',
         },
         base: {
-            value: colors[0][1],
+            value: _colors[0][1],
         },
         specular: {
-            value: colors[0][2],
+            value: _colors[0][2],
         },
         emissive: {
-            value: colors[0][3],
+            value: _colors[0][3],
         },
+        'save as new': button(() => {
+            _colors = [..._colors, [`#${_colors.length}`, `#${colorBase.convertLinearToSRGB().getHexString()}`, `#${colorSpecular.convertLinearToSRGB().getHexString()}`, `#${colorEmissive.convertLinearToSRGB().getHexString()}`, `${backI}`, `${borderI}`]]
+            window.localStorage.setItem('colors', JSON.stringify(_colors))
+        })
     }));
 
     React.useEffect(() => {
         setColors({
-            name: colors[preset][0],
-            base: colors[preset][1],
-            specular: colors[preset][2],
-            emissive: colors[preset][3],
+            name: _colors[preset][0],
+            base: _colors[preset][1],
+            specular: _colors[preset][2],
+            emissive: _colors[preset][3],
         });
 
-        colorBase = new THREE.Color(colors[preset][1]).convertSRGBToLinear();
-        colorEmissive = new THREE.Color(colors[preset][3]).convertSRGBToLinear();
-        colorSpecular = new THREE.Color(colors[preset][2]).convertSRGBToLinear();
+        colorBase = new THREE.Color(_colors[preset][1]).convertSRGBToLinear();
+        colorEmissive = new THREE.Color(_colors[preset][3]).convertSRGBToLinear();
+        colorSpecular = new THREE.Color(_colors[preset][2]).convertSRGBToLinear();
 
-        (window as any).inkName = colors[preset][0].toLocaleLowerCase();
+        (window as any).inkName = _colors[preset][0].toLocaleLowerCase();
     }, [preset]);
+
+    React.useEffect(() => {
+        colorBase = new THREE.Color(base).convertSRGBToLinear();
+        colorEmissive = new THREE.Color(emissive).convertSRGBToLinear();
+        colorSpecular = new THREE.Color(specular).convertSRGBToLinear();
+    }, [base, specular, emissive])
 
     React.useEffect(() => {
         scene.background = new THREE.Color('#000');
     }, []);
+
+    React.useEffect(() => {
+        setBorder({ borderName: borders[borderI][1] });
+        (window as any).borderName = borders[borderI][1].toLocaleLowerCase();
+    }, [borderI]);
+
+    React.useEffect(() => {
+        setBack({ backName: backs[backI][1] });
+        (window as any).backName = backs[backI][1].toLocaleLowerCase();
+    }, [backI]);
 
     async function delay () {
         return new Promise<any>((resolve) => {
@@ -108,6 +139,7 @@ function View () {
         gl.render(scene, camera);
         await gl.domElement.toBlob(
             async function (blob) {
+                if (!blob) return;
                 var a = document.createElement('a');
                 var url = await URL.createObjectURL(blob);
                 a.href = url;
@@ -125,21 +157,19 @@ function View () {
         let [i, j, k] = [0, 0, 0];
         for (const back of backs) {
             j = k = 0;
-            const backName = backNames[i].toLowerCase();
             setBack({ back: i })
             i++;
             for (const border of borders) {
                 k = 0;
-                const borderName = borderNames[j].toLowerCase();
                 setBorder({ border: j });
                 j++;
                 for (const color of colors) {
                     setColors({ preset: k });
-                    const inkName = colors[k][0].toLowerCase();
-                    const name = `preview-side-by-side-${backName}-${borderName}-${inkName}.png`;
+                    const inkName = _colors[k][0].toLowerCase();
+                    const name = `preview-side-by-side-${back[1]}-${border[1]}-${inkName}.png`;
                     k++;
-                    if (variants.includes(`${borderName}-${backName}-${inkName}`)) {
-                        console.log(`render ${borderName}-${backName}-${inkName}`);
+                    if (variants.includes(`${border[1]}-${back[1]}-${inkName}`)) {
+                        console.log(`render ${border[1]}-${back[1]}-${inkName}`);
                         await saveImage(name);
                     }
                 };
@@ -173,22 +203,21 @@ function View () {
                         // @ts-ignore
                         normalScale={[0.03, 0.03]}
                     />
-                    <meshStandardMaterial
-                        blending={THREE.NormalBlending}
-                        attachArray="material"
-                        map={useTheFoolLayers('flat')[0]}
-                    />
                 </>}
                 children={<>
-                    <CardBorderInk
-                        colorBase={colorBase}
-                        colorEmissive={colorEmissive}
-                        colorSpecular={colorSpecular}
+                    <CardInk
+                        side={THREE.FrontSide}
+                        color={colorBase}
+                        emissive={colorEmissive}
+                        specular={colorSpecular}
+                        alpha={borders[borderI][0]}
                     />
-                    <CardBackInk
-                        colorBase={colorBase}
-                        colorEmissive={colorEmissive}
-                        colorSpecular={colorSpecular}
+                    <CardInk
+                        side={THREE.BackSide}
+                        color={colorBase}
+                        emissive={colorEmissive}
+                        specular={colorSpecular}
+                        alpha={backs[backI][0]}
                     />
                 </>}
             />
@@ -214,19 +243,25 @@ function View () {
                     <meshStandardMaterial
                         blending={THREE.NormalBlending}
                         attachArray="material"
-                        map={useTheFoolLayers('flat')[0]}
+                        map={useTheMagicianFlat()}
+                        roughness={.8}
+                        metalness={1}
                     />
                 </>}
                 children={<>
-                    <CardBorderInk
-                        colorBase={colorBase}
-                        colorEmissive={colorEmissive}
-                        colorSpecular={colorSpecular}
+                    <CardInk
+                        side={THREE.FrontSide}
+                        color={colorBase}
+                        emissive={colorEmissive}
+                        specular={colorSpecular}
+                        alpha={borders[borderI][0]}
                     />
-                    <CardBackInk
-                        colorBase={colorBase}
-                        colorEmissive={colorEmissive}
-                        colorSpecular={colorSpecular}
+                    <CardInk
+                        side={THREE.BackSide}
+                        color={colorBase}
+                        emissive={colorEmissive}
+                        specular={colorSpecular}
+                        alpha={backs[backI][0]}
                     />
                 </>}
             />

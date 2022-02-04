@@ -1,4 +1,6 @@
-const colors = [
+import React from "react";
+
+let colors = [
     [
         'Copper',
         "#000000",
@@ -41,6 +43,28 @@ const colors = [
         "#7239aa",
         "#00536c",
     ],
-];
+    [
+        'new #1',
+        '#140c0c',
+        '#3b3636',
+        '#000',
+    ],
+    [
+        'new #2',
+        '#07070d',
+        '#222341',
+        '#656565',
+    ],
+    [
+        'new #3',
+        '#0d0d21',
+        '#646580',
+        '#2a4d79',
+    ],
+]; 
+
+if (window.localStorage.getItem('colors')) {
+    colors = JSON.parse(window.localStorage.getItem('colors') as string);
+}
 
 export default colors;

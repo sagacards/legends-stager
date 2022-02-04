@@ -66,13 +66,18 @@ export function SideBySide () {
             target={center}
         />
         <directionalLight
-            position={[-5, -1.5, 3]}
+            position={[-3, -1.5, 3]}
             intensity={.25}
             target={center}
         />
         <directionalLight
-            position={[-5, 1.5, 3]}
+            position={[-3, 1.5, 3]}
             intensity={.25}
+            target={center}
+        />
+        <directionalLight
+            position={[-5, 0, 3]}
+            intensity={.125}
             target={center}
         />
     </>

@@ -5,8 +5,6 @@ import {
 } from '@react-three/fiber';
 import { Sun } from 'three/primitives/lights';
 import { useCardBacks, useCardBorders } from 'three/primitives/textures';
-import { borderNames } from 'three/border-ink';
-import { backNames } from 'three/back-ink';
 import { Leva, useControls } from 'leva';
 import colors from 'src/colors';
 import { LegendCard } from 'three/legend-stager';
@@ -155,20 +153,18 @@ function View({ canvas }: { canvas: HTMLCanvasElement | null }) {
         let [i, j, k] = [0, 0, 0];
         for (const back of backs) {
             j = k = 0;
-            const backName = backNames[i].toLowerCase();
             setBack({ back: i })
             i++;
             for (const border of borders) {
                 k = 0;
-                const borderName = borderNames[j].toLowerCase();
                 setBorder({ border: j });
                 j++;
                 for (const color of colors) {
                     setColors({ preset: k });
                     const inkName = colors[k][0].toLowerCase();
-                    if (variants.includes(`${borderName}-${backName}-${inkName}`)) {
-                        console.log(`render ${backName}-${borderName}-${inkName}`);
-                        await saveImage(`preview-animated-${backName}-${borderName}-${inkName}`);
+                    if (variants.includes(`${border[1]}-${back[1]}-${inkName}`)) {
+                        console.log(`render ${back[1]}-${border[1]}-${inkName}`);
+                        await saveImage(`preview-animated-${back[1]}-${border[1]}-${inkName}`);
                     }
                     k++;
                 };

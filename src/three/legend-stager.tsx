@@ -18,8 +18,7 @@ import {
 import { cardSpringConf } from 'three/primitives/springs';
 import Card from 'three/card';
 import { Sun } from 'three/primitives/lights';
-import { CardBackInk } from './back-ink';
-import { CardBorderInk } from './border-ink';
+import CardInk from './ink';
 
 export interface ClockRef {
     tick: number;        // Counter for number of ticks
@@ -169,15 +168,17 @@ function CardMesh({ texture }: { texture: THREE.Texture }) {
                 />
             </>}
             children={<>
-                <CardBorderInk
-                    colorBase={colorBase}
-                    colorEmissive={colorEmissive}
-                    colorSpecular={colorSpecular}
+                <CardInk
+                    side={THREE.FrontSide}
+                    color={colorBase}
+                    emissive={colorEmissive}
+                    specular={colorSpecular}
                 />
-                <CardBackInk
-                    colorBase={colorBase}
-                    colorEmissive={colorEmissive}
-                    colorSpecular={colorSpecular}
+                <CardInk
+                    side={THREE.BackSide}
+                    color={colorBase}
+                    emissive={colorEmissive}
+                    specular={colorSpecular}
                 />
             </>}
         />
@@ -220,7 +221,7 @@ export function LegendCard({ rotation, ...props }: LegendCardProps) {
     });
     return (
         <animated.group {...props} ref={mesh} rotation={rotation}>
-            {createPortal(<CardArt textures={useTheFoolLayers()} />, scene.current)}
+            {createPortal(<CardArt textures={useTheFoolLayers().map(([t]) => t)} />, scene.current)}
             <CardMesh texture={target.current.texture} />
         </animated.group>
     );
