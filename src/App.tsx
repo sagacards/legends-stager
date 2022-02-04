@@ -1,5 +1,4 @@
 import React from 'react';
-import IndexPage from './pages/index';
 import {
     BrowserRouter as Router,
     Routes,
@@ -15,10 +14,9 @@ export default function App() {
     return <Router>
         <Routes>
             <Route path="/stager" element={<StagerPage />} />
-            <Route path="/side-by-side" element={<SideBySidePage />} />
             <Route path="/animated" element={<AnimatedPage />} />
             <Route path="/test" element={<TestPage />} />
-            <Route path="/" element={<IndexPage />} />
+            <Route path="/" element={<SideBySidePage />} />
         </Routes>
     </Router>
 };

@@ -7,10 +7,12 @@ export function useCardGeometry() {
     return geometry.current;
 }
 
+export const cardThickeness = .005;
+
 export function CardGeometry (shape: THREE.Shape = TarotCardShape()) {
     const geometry = new THREE.ExtrudeGeometry(shape, {
         bevelEnabled: false,
-        depth: .025,
+        depth: cardThickeness,
         steps: 1,
         UVGenerator: CardUVGenerator(shape),
     });
@@ -78,8 +80,10 @@ export function roundedRectFromDimensions (width: number, height: number, corner
     return shape;
 };
 
+export const cardDimensions = [2.75, 4.75, .125];
+
 export function TarotCardShape () {
-    return roundedRectFromDimensions(2.75, 4.75, .125);
+    return roundedRectFromDimensions(cardDimensions[0], cardDimensions[1], cardDimensions[2]);
 };
 
 export function getDimensions (shape: THREE.Shape) {

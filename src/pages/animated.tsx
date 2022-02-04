@@ -6,7 +6,7 @@ import {
 import { Sun } from 'three/primitives/lights';
 import { useCardBacks, useCardBorders } from 'three/primitives/textures';
 import { Leva, useControls } from 'leva';
-import colors from 'src/colors';
+import colors from 'three/primitives/colors';
 import { LegendCard } from 'three/legend-stager';
 //@ts-ignore
 import WebMWriter from 'webm-writer';
