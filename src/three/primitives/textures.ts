@@ -72,8 +72,8 @@ export function useTheMagicianFlat() {
 
 export function useArt (modules : Record<string, () => Promise<{ [key: string]: any; }>>) : Texture[] {
     return React.useMemo(() => Object.entries(modules)
-        .map(([path], i) => [useLoader(THREE.TextureLoader, path), (path.match(/\/([a-z0-9\-]+)\./) as string[])[1], i])
+        .map(([path], i) => [path, (path.match(/\/([a-z0-9\-]+)\./) as string[])[1], i])
         .sort((a, b) => (a[1] as number) - (b[1] as number))
-        .map(x => ({ texture: x[0], name: x[1]})) as Texture[]
+        .map(x => ({ path: x[0], name: x[1]})) as Texture[]
     , []);
 }

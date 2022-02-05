@@ -81,6 +81,7 @@ export function roundedRectFromDimensions (width: number, height: number, corner
 };
 
 export const cardDimensions = [2.75, 4.75, .125];
+export const textureSize = [2750, 4750];
 
 export function TarotCardShape () {
     return roundedRectFromDimensions(cardDimensions[0], cardDimensions[1], cardDimensions[2]);

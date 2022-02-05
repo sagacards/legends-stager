@@ -1,8 +1,16 @@
 import React from 'react';
 import * as THREE from 'three';
+import { useLoader } from '@react-three/fiber';
 import create from 'zustand';
-import { useCardBacks, useCardBorders } from 'three/primitives/textures';
+
+import Normal from 'art/common/normal.webp';
+import FoolFlat from 'art/0-the-fool/fool-flat.webp';
+import MagicianFlat from 'art/1-the-magician/magician-flat.webp';
 import colors from 'three/primitives/colors';
+const Backs = import.meta.glob('/src/art/common/back-*.webp');
+const Borders = import.meta.glob('/src/art/common/border-*.webp');
+const Fool = import.meta.glob('/src/art/0-the-fool/fool-layer-*.webp');
+const Magician = import.meta.glob('/src/art/1-the-magician/magician-layer-*.webp');
 
 export type ViewMode = 'side-by-side' | 'animated' | 'free';
 
@@ -11,11 +19,12 @@ export interface Color {
     base    : string;
     specular: string;
     emissive: string;
+    background: string;
 };
 
 export interface Texture {
-    name    : string;
-    texture : THREE.Texture;
+    name: string;
+    path: string;
 };
 
 interface Store {
@@ -38,7 +47,6 @@ interface Store {
 
     // Card Backs
     backs       : Texture[];
-    setBacks    : (b : Texture[]) => void;
 
     // Active Back
     back        : Texture;
@@ -46,7 +54,6 @@ interface Store {
 
     // Card Borders
     borders     : Texture[];
-    setBorders  : (b : Texture[]) => void;
 
     // Active Border
     border      : Texture;
@@ -54,36 +61,29 @@ interface Store {
 
 };
 
-export default function useStore() {
+const backs = importArt(Backs);
+const borders = importArt(Borders);
+const localColors = (window.localStorage.getItem('colors'))
+    ? JSON.parse(window.localStorage.getItem('colors') as string) as Color[]
+    : colors;
 
-    const backs = useCardBacks();
-    const borders = useCardBorders();
-
-    const initialColors = React.useMemo(() => {
-        if (window.localStorage.getItem('colors')) {
-            const localColors = JSON.parse(window.localStorage.getItem('colors') as string) as Color[];
-            return localColors;
-        }
-        return colors;
-    }, [])
-
-    const useStore = create<Store>((set, get) => ({
+const useStore = create<Store>((set, get) => {
+    return {
         viewMode: 'side-by-side',
         setViewMode (viewMode) {
             set({ viewMode });
         },
 
-        colors: initialColors,
+        colors: localColors,
         setColors (colors) {
             window.localStorage.setItem('colors', JSON.stringify(colors));
             set({ colors });
         },
 
-        color: initialColors[0],
+        color: localColors[0],
         setColor (color) {
-            // Use a clone so we can edit properties without touching the original
-            const c = { ...color };
-            set({ color: c });
+            // console.info(`Active color changed. Name: ${color.name}, Base: ${color.base}, Specular: ${color.specular}, Emissive: ${color.emissive}`);
+            set({ color });
         },
 
         saveNewColor () {
@@ -91,6 +91,11 @@ export default function useStore() {
 
             const colors = get().colors;
             const color = get().color;
+
+            if (!color) {
+                console.error(`Cannot save new color, no color is defined.`);
+                return;
+            };
 
             const newColor = {
                 ...color,
@@ -108,6 +113,11 @@ export default function useStore() {
             const colors = [...get().colors];
             const color = get().color;
 
+            if (!color) {
+                console.error(`Could not update color, no color is defined.`);
+                return
+            };
+
             const existing = colors.find(x => x.name === color.name);
 
             if (!existing) {
@@ -122,26 +132,25 @@ export default function useStore() {
             setColors(colors);
         },
 
-        backs: backs,
-        setBacks (backs) {
-            set({ backs });
-        },
-
+        backs,
         back: backs[0],
         setBack (back) {
             set({ back });
         },
 
-        borders: borders,
-        setBorders (borders) {
-            set({ borders });
-        },
-
+        borders,
         border: borders[0],
         setBorder (border) {
             set({ border });
         },
-    }));
+    }
+});
 
-    return useStore;
-};
+export default useStore;
+
+export function importArt (modules : Record<string, () => Promise<{ [key: string]: any; }>>) : Texture[] {
+    return Object.entries(modules)
+        .map(([path], i) => [path, (path.match(/\/([a-z0-9\-]+)\./) as string[])[1], i])
+        .sort((a, b) => (a[1] as number) - (b[1] as number))
+        .map(x => ({ path: x[0], name: x[1]})) as Texture[];
+}
