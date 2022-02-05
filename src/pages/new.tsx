@@ -24,6 +24,10 @@ function StagingScene() {
 
     const store = useStore();
 
+    // Capture render context for exports
+    const { gl, camera, scene } = useThree();
+    React.useEffect(() => store.setCapture([camera, scene, gl]), []);
+
     // Initialize stage controls
     useStageControls();
 
@@ -86,12 +90,10 @@ function StagingScene() {
                 color={'#000'}
             />
         </mesh>
-        <spotLight color={store.color.background} angle={5} penumbra={Math.PI / 4} decay={0} target={center} position={[0, -5, 0]} intensity={5} />
+        <spotLight color={colorBackground} angle={5} penumbra={Math.PI / 4} decay={0} target={center} position={[0, -5, 0]} intensity={5} />
         <SideBySide />
     </>
 };
-
-
 
 // Renders card art onto card mesh using default camera and a portal to create the depth effect.
 const e = 1.2 / 1000; // Factor to normalize art assets to tarot card dimensions
@@ -107,7 +109,7 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         if (!props.parent) return;
         const rx = props.parent.rotation.x;
         const ry = props.parent.rotation.y;
-        const limit = Math.PI * 3;
+        const limit = Math.PI * 2;
         const cx = THREE.MathUtils.clamp(
             rx,
             -limit,
@@ -192,17 +194,19 @@ function ParallaxCardLayers(props: { textures: THREE.Texture[] }) {
 
 function useStageControls() {
 
-    const { setViewMode, setBack, setBorder, setColor, setColors, saveNewColor, } = useStore(state => ({
+    const { setViewMode, setBack, setBorder, setColor, setColors, exportAllSideBySide, randomPlay, saveColor, saveNewColor, downloadColors } = useStore(state => ({
         setViewMode: state.setViewMode,
         setBack: state.setBack,
         setBorder: state.setBorder,
         setColor: state.setColor,
         setColors: state.setColors,
         saveNewColor: state.saveNewColor,
+        downloadColors: state.downloadColors,
+        saveColor: state.saveColor,
+        exportAllSideBySide: state.exportAllSideBySide,
+        randomPlay: state.randomPlay,
     }), shallow);
 
-    const back = useStore(state => ({ ...state.back }), shallow);
-    const border = useStore(state => ({ ...state.border }), shallow);
     const color = useStore(state => ({ ...state.color }), shallow);
     const backs = useStore(state => ([...state.backs]), shallow);
     const borders = useStore(state => ([...state.borders]), shallow);
@@ -279,7 +283,11 @@ function useStageControls() {
             hint: 'The colour of the backdrop spotlight',
             value: color.background,
         },
-        'save as new': button(saveNewColor),
+        'overwrite colour': button(saveColor),
+        'save as new colour': button(saveNewColor),
+        'download colours': button(downloadColors),
+        'export side-by-sides': button(exportAllSideBySide),
+        'random play': button(randomPlay),
     }));
 
     React.useEffect(() => {
@@ -287,23 +295,11 @@ function useStageControls() {
         const color = colors.find(x => x.name === colorControls.preset) as Color;
         setColor(color);
 
-        // Update scene colours
-        colorBase = new THREE.Color(color.base).convertSRGBToLinear();
-        colorEmissive = new THREE.Color(color.emissive).convertSRGBToLinear();
-        colorSpecular = new THREE.Color(color.specular).convertSRGBToLinear();
-        colorBackground = new THREE.Color(colorControls.background).convertSRGBToLinear();
-
         // Update colour controls
         setColorControls(color);
     }, [colorControls.preset]);
 
     React.useEffect(() => {
-        // Update scene colours
-        colorBase = new THREE.Color(colorControls.base).convertSRGBToLinear();
-        colorEmissive = new THREE.Color(colorControls.emissive).convertSRGBToLinear();
-        colorSpecular = new THREE.Color(colorControls.specular).convertSRGBToLinear();
-        colorBackground = new THREE.Color(colorControls.background).convertSRGBToLinear();
-
         // Push colour changes to store
         setColor({
             name: colorControls.name,
@@ -314,16 +310,25 @@ function useStageControls() {
         });
     }, [colorControls])
 
-    React.useEffect(() => {
-        setColorOptions(colors.map(x => x.name));
-        setColorControls({ preset: color.name });
-    }, [colors]);
+    // Update scene colours
+    React.useEffect(() => useStore.subscribe((state, prev) => {
+        if (!shallowEqual(state.colors, prev.colors)) {
+            setColorOptions(colors.map(x => x.name));
+            setColorControls({ preset: color.name });
+        };
+        if (!shallowEqual(state.color, prev.color)) {
+            colorBase = new THREE.Color(state.color.base).convertSRGBToLinear();
+            colorEmissive = new THREE.Color(state.color.emissive).convertSRGBToLinear();
+            colorSpecular = new THREE.Color(state.color.specular).convertSRGBToLinear();
+            colorBackground = new THREE.Color(state.color.background).convertSRGBToLinear();
+        };
+    }), []);
 };
 
 export default function StagingPage() {
 
     return <div style={{ width: '1000px', height: '1000px' }}>
-        <Canvas dpr={4}>
+        <Canvas dpr={2}>
             <React.Suspense fallback={<></>}>
                 <StagingScene />
             </React.Suspense>
@@ -331,3 +336,17 @@ export default function StagingPage() {
     </div>
 
 };
+
+function shallowEqual(object1 : any, object2 : any) {
+    const keys1 = Object.keys(object1);
+    const keys2 = Object.keys(object2);
+    if (keys1.length !== keys2.length) {
+      return false;
+    }
+    for (let key of keys1) {
+      if (object1[key] !== object2[key]) {
+        return false;
+      }
+    }
+    return true;
+  }

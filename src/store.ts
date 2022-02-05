@@ -44,6 +44,7 @@ interface Store {
     // Updating Colors
     saveNewColor: () => void;
     saveColor: () => void;
+    downloadColors: () => void;
 
     // Card Backs
     backs       : Texture[];
@@ -58,6 +59,14 @@ interface Store {
     // Active Border
     border      : Texture;
     setBorder   : (b : Texture) => void;
+
+    // Exporting
+    capture?    : [THREE.Camera, THREE.Scene, THREE.WebGLRenderer];
+    setCapture  : (capture : [THREE.Camera, THREE.Scene, THREE.WebGLRenderer]) => void;
+    exportAllSideBySide: () => void;
+    saveImage   : (name: string) => void;
+    randomPlaying?: number;
+    randomPlay  : () => void;
 
 };
 
@@ -125,11 +134,23 @@ const useStore = create<Store>((set, get) => {
                 return;
             }
 
+            existing.name = color.name;
             existing.base = color.base;
             existing.specular = color.specular;
             existing.emissive = color.emissive;
+            existing.background = color.background;
 
             setColors(colors);
+        },
+
+        async downloadColors () {
+            const colors = get().colors;
+            const json = JSON.stringify(colors);
+            var a = document.createElement('a');
+            a.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(json));
+            a.setAttribute('download', 'colors.json');
+            await a.click();
+
         },
 
         backs,
@@ -143,6 +164,85 @@ const useStore = create<Store>((set, get) => {
         setBorder (border) {
             set({ border });
         },
+
+        setCapture (capture) { set({ capture })},
+
+        async exportAllSideBySide () {
+            const backs = get().backs;
+            const borders = get().borders;
+            const colors = get().colors;
+            const capture = get().capture;
+
+            if (!capture) {
+                console.error(`Can't capture, no rendering context.`);
+                return;
+            }
+
+            // Run through each texture once to make sure they're all loaded.
+            for (const back of backs) { await delay(100); set({ back }) };
+            for (const border of borders) { await delay(100); set({ border }) };
+
+            for (const back of backs) {
+                set({ back });
+                for (const border of borders) {
+                    set({ border });
+                    for (const color of colors) {
+                        set({ color });
+                        const name = `preview-side-by-side-${back.name.toLowerCase()}-${border.name.toLowerCase()}-${color.name.toLowerCase()}.png`;
+                        if (false) {
+                            // variants.includes(name);
+                            continue;
+                        }
+                        console.info(`render ${name}`);
+                        await get().saveImage(name);
+                    };
+                };
+            };
+        },
+
+        async saveImage(name: string) {
+            await delay(500);
+            const capture = get().capture;
+            if (!capture) {
+                console.error(`Can't capture, no rendering context.`);
+                return;
+            }
+            const [camera, scene, gl] = capture;
+            gl.domElement.getContext('webgl', { preserveDrawingBuffer: true });
+            gl.render(scene, camera);
+            await gl.domElement.toBlob(
+                async function (blob) {
+                    if (!blob) return;
+                    var a = document.createElement('a');
+                    var url = await URL.createObjectURL(blob);
+                    a.href = url;
+                    a.download = name;
+                    await a.click();
+                },
+                'image/png',
+                1.0
+            )
+            gl.domElement.getContext('webgl', { preserveDrawingBuffer: false });
+        },
+
+        randomPlay () {
+            let i = get().randomPlaying;
+            if (i) {
+                clearInterval(i);
+                set({ randomPlaying: undefined });
+                return
+            };
+            const backs = get().backs;
+            const borders = get().borders;
+            const colors = get().colors;
+            i = setInterval(() => {
+                const back = backs[Math.floor(backs.length * Math.random())];
+                const border = borders[Math.floor(borders.length * Math.random())];
+                const color = colors[Math.floor(colors.length * Math.random())];
+                set({ back, border, color });
+            }, 250);
+            set({ randomPlaying : i });
+        },
     }
 });
 
@@ -153,4 +253,10 @@ export function importArt (modules : Record<string, () => Promise<{ [key: string
         .map(([path], i) => [path, (path.match(/\/([a-z0-9\-]+)\./) as string[])[1], i])
         .sort((a, b) => (a[1] as number) - (b[1] as number))
         .map(x => ({ path: x[0], name: x[1]})) as Texture[];
+}
+
+async function delay (t = 500) {
+    return new Promise<any>((resolve) => {
+        setTimeout(() => resolve(true), t);
+    });
 }
