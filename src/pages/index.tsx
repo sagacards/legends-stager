@@ -11,6 +11,7 @@ import { cardDimensions, textureSize } from 'three/primitives/geometry';
 import { SideBySide } from 'three/primitives/lights';
 import { useGoldLeafNormal, useTheMagicianLayers } from 'three/primitives/textures';
 import shallow from 'zustand/shallow'
+import { Store } from 'leva/dist/declarations/src/store';
 
 let colorBase = new THREE.Color(colors[0].base).convertSRGBToLinear();
 let colorSpecular = new THREE.Color(colors[0].specular).convertSRGBToLinear();
@@ -202,7 +203,7 @@ function ParallaxCardLayers(props: { textures: THREE.Texture[] }) {
 
 function useStageControls() {
 
-    const { setViewMode, setBack, setBorder, setColor, setColors, saveAllStatic, randomPlay, saveColor, saveNewColor, downloadColors, saveAllAnimated } = useStore(state => ({
+    const { setViewMode, setBack, setBorder, setColor, setColors, saveAllStatic, randomPlay, saveColor, saveNewColor, downloadColors, saveAllAnimated, setVariant, addVariant, downloadVariants } = useStore(state => ({
         setViewMode: state.setViewMode,
         setBack: state.setBack,
         setBorder: state.setBorder,
@@ -214,12 +215,18 @@ function useStageControls() {
         saveAllStatic: state.saveAllStatic,
         randomPlay: state.randomPlay,
         saveAllAnimated: state.saveAllAnimated,
+        setVariant: state.setVariant,
+        addVariant: state.addVariant,
+        downloadVariants: state.downloadVariants,
     }), shallow);
 
     const color = useStore(state => ({ ...state.color }), shallow);
+    const back = useStore(state => (state.back), shallow);
     const backs = useStore(state => ([...state.backs]), shallow);
+    const border = useStore(state => (state.border), shallow);
     const borders = useStore(state => ([...state.borders]), shallow);
     const colors = useStore(state => ([...state.colors]), shallow);
+    const variants = useStore(state => ([...state.variants]), shallow);
 
 
     // View Mode //
@@ -336,6 +343,22 @@ function useStageControls() {
             colorBackground = new THREE.Color(state.color.background).convertSRGBToLinear();
         };
     }), []);
+
+    const [variantControls, setVariantControls] = useControls('Variants', () => ({
+        variant: {
+            label: 'Variant',
+            value: 0,
+            min: 0,
+            max: variants.length - 1,
+            step: 1,
+        },
+        'add variant': button(() => addVariant({ back : back.name, border: border.name, color: color.name })),
+        'download variants': button(downloadVariants),
+    }));
+
+    React.useEffect(() => {
+        setVariant(variants[variantControls.variant]);
+    }, [variantControls]);
 };
 
 export default function StagingPage() {

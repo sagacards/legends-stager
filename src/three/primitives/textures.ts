@@ -2,7 +2,7 @@ import { useLoader } from '@react-three/fiber';
 import React from 'react';
 import * as THREE from 'three';
 
-import useLegendManifest, { host } from 'hooks/legend-manifest';
+// import useLegendManifest, { host } from 'hooks/legend-manifest';
 
 import Normal from 'art/common/normal.webp';
 import FoolFlat from 'art/0-the-fool/fool-flat.webp';
@@ -13,32 +13,32 @@ const Borders = import.meta.glob('/src/art/common/border-*.webp');
 const Fool = import.meta.glob('/src/art/0-the-fool/fool-layer-*.webp');
 const Magician = import.meta.glob('/src/art/1-the-magician/magician-layer-*.webp');
 
-export function useLegendNormal(): THREE.Texture {
-    const { maps: { normal } } = useLegendManifest();
-    const texture = useLoader(THREE.TextureLoader, `${host}${normal}`);
-    return texture;
-};
+// export function useLegendNormal(): THREE.Texture {
+//     const { maps: { normal } } = useLegendManifest();
+//     const texture = useLoader(THREE.TextureLoader, `${host}${normal}`);
+//     return texture;
+// };
 
-export function useLegendBack(): THREE.Texture {
-    const { maps: { back } } = useLegendManifest();
-    const texture = useLoader(THREE.TextureLoader, `${host}${back}`);
-    return texture;
-};
+// export function useLegendBack(): THREE.Texture {
+//     const { maps: { back } } = useLegendManifest();
+//     const texture = useLoader(THREE.TextureLoader, `${host}${back}`);
+//     return texture;
+// };
 
-export function useLegendBorder(): THREE.Texture {
-    const { maps: { border } } = useLegendManifest();
-    const texture = useLoader(THREE.TextureLoader, `${host}${border}`);
-    return texture;
-};
+// export function useLegendBorder(): THREE.Texture {
+//     const { maps: { border } } = useLegendManifest();
+//     const texture = useLoader(THREE.TextureLoader, `${host}${border}`);
+//     return texture;
+// };
 
-export function useLegendColors(): [THREE.Color, THREE.Color, THREE.Color] {
-    const { colors: { base, specular, emissive } } = useLegendManifest();
-    return [
-        new THREE.Color(base).convertSRGBToLinear(),
-        new THREE.Color(specular).convertSRGBToLinear(),
-        new THREE.Color(emissive).convertSRGBToLinear(),
-    ];
-};
+// export function useLegendColors(): [THREE.Color, THREE.Color, THREE.Color] {
+//     const { colors: { base, specular, emissive } } = useLegendManifest();
+//     return [
+//         new THREE.Color(base).convertSRGBToLinear(),
+//         new THREE.Color(specular).convertSRGBToLinear(),
+//         new THREE.Color(emissive).convertSRGBToLinear(),
+//     ];
+// };
 
 export function useGoldLeafNormal(): THREE.Texture {
     const texture = useLoader(THREE.TextureLoader, Normal);

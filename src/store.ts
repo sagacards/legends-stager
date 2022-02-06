@@ -7,6 +7,7 @@ import WebMWriter from 'webm-writer';
 import download from 'downloadjs';
 
 import colors from 'three/primitives/colors';
+import variants, { Variant } from 'three/primitives/variants';
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
 
@@ -76,6 +77,16 @@ interface Store {
     randomPlaying?  : number;
     randomPlay      : () => void;
 
+    // Active Variant
+    variant         : Variant;
+    setVariant      : (variant : Variant) => void;
+
+    // Variants
+    variants        : Variant[];
+    addVariant      : (variant : Variant) => void;
+    downloadVariants: () => void;
+
+
 };
 
 const backs = importArt(Backs);
@@ -83,6 +94,9 @@ const borders = importArt(Borders);
 const localColors = (window.localStorage.getItem('colors'))
     ? JSON.parse(window.localStorage.getItem('colors') as string) as Color[]
     : colors;
+const localVariants = (window.localStorage.getItem('variants'))
+    ? JSON.parse(window.localStorage.getItem('variants') as string) as Variant[]
+    : variants;
 
 let resolver : () => void = () => {};
 const frames = 60 * 1 // 12;
@@ -93,6 +107,31 @@ const useStore = create<Store>((set, get) => {
         viewMode: 'side-by-side',
         setViewMode (viewMode) {
             set({ viewMode });
+        },
+
+        variants : localVariants,
+        addVariant (variant) {
+            const variants = [...get().variants, variant];
+            window.localStorage.setItem('variants', JSON.stringify(variants));
+            set({ variants });
+        },
+
+        variant : localVariants[0],
+        setVariant (variant) {
+            const color = get().colors.find(x => x.name.toLowerCase() === variant.color.toLowerCase()) as Color;
+            const back = get().backs.find(x => x.name.toLowerCase() === variant.back.toLowerCase()) as Texture;
+            const border = get().borders.find(x => x.name.toLowerCase() === variant.border.toLowerCase()) as Texture;
+            console.log(color, back, border)
+            set({ variant, color, back, border });
+        },
+
+        async downloadVariants () {
+            const variants = get().variants;
+            const json = JSON.stringify(variants);
+            var a = document.createElement('a');
+            a.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(json));
+            a.setAttribute('download', 'variants.json');
+            await a.click();
         },
 
         colors: localColors,
@@ -162,7 +201,6 @@ const useStore = create<Store>((set, get) => {
             a.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(json));
             a.setAttribute('download', 'colors.json');
             await a.click();
-
         },
 
         backs,
