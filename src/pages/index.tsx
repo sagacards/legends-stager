@@ -334,13 +334,17 @@ function useStageControls() {
     React.useEffect(() => useStore.subscribe((state, prev) => {
         if (!shallowEqual(state.colors, prev.colors)) {
             setColorOptions(colors.map(x => x.name));
-            setColorControls({ preset: color.name });
+            setColorControls({ preset: state.color.name });
         };
         if (!shallowEqual(state.color, prev.color)) {
             colorBase = new THREE.Color(state.color.base).convertSRGBToLinear();
             colorEmissive = new THREE.Color(state.color.emissive).convertSRGBToLinear();
             colorSpecular = new THREE.Color(state.color.specular).convertSRGBToLinear();
             colorBackground = new THREE.Color(state.color.background).convertSRGBToLinear();
+        };
+        if (!shallowEqual(state.variant, prev.variant)) {
+            setColorControls({ preset: state.color.name });
+            setTextureControl({ back : state.back.name, border : state.border.name })
         };
     }), []);
 
@@ -352,7 +356,7 @@ function useStageControls() {
             max: variants.length - 1,
             step: 1,
         },
-        'add variant': button(() => addVariant({ back : back.name, border: border.name, color: color.name })),
+        'add variant': button(addVariant),
         'download variants': button(downloadVariants),
     }));
 

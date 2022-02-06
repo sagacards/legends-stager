@@ -83,7 +83,7 @@ interface Store {
 
     // Variants
     variants        : Variant[];
-    addVariant      : (variant : Variant) => void;
+    addVariant      : () => void;
     downloadVariants: () => void;
 
 
@@ -110,8 +110,8 @@ const useStore = create<Store>((set, get) => {
         },
 
         variants : localVariants,
-        addVariant (variant) {
-            const variants = [...get().variants, variant];
+        addVariant () {
+            const variants = [...get().variants, { back: get().back.name, border: get().border.name, color: get().color.name }];
             window.localStorage.setItem('variants', JSON.stringify(variants));
             set({ variants });
         },
@@ -121,7 +121,6 @@ const useStore = create<Store>((set, get) => {
             const color = get().colors.find(x => x.name.toLowerCase() === variant.color.toLowerCase()) as Color;
             const back = get().backs.find(x => x.name.toLowerCase() === variant.back.toLowerCase()) as Texture;
             const border = get().borders.find(x => x.name.toLowerCase() === variant.border.toLowerCase()) as Texture;
-            console.log(color, back, border)
             set({ variant, color, back, border });
         },
 
