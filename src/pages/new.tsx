@@ -26,7 +26,9 @@ function StagingScene() {
 
     // Capture render context for exports
     const { gl, camera, scene } = useThree();
-    React.useEffect(() => store.setCapture([camera, scene, gl]), []);
+    React.useEffect(() => {
+        store.setCapture({ camera, scene, gl })
+    }, []);
 
     // Initialize stage controls
     useStageControls();
@@ -40,7 +42,10 @@ function StagingScene() {
 
         if (!mainCard.current) return;
 
-        if (store.viewMode === 'side-by-side') {
+        if (store.exporting && store.rotation) {
+            mainCard.current.position.set(0, 0, .5);
+            mainCard.current.rotation.set(...store.rotation);
+        } else if (store.viewMode === 'side-by-side') {
             mainCard.current.position.set(-1.5, 0, 1);
             mainCard.current.rotation.set(0, -Math.PI * .05, 0);
         } else if (store.viewMode === 'animated') {
@@ -104,7 +109,10 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
     const camera = React.useRef(
         new THREE.OrthographicCamera(-cardDimensions[0] / 2, cardDimensions[0] / 2, cardDimensions[1] / 2, -cardDimensions[1] / 2)
     );
-    React.useEffect(() => void (camera.current.position.z = 20), []);
+    React.useEffect(() => {
+        scene.current.background = new THREE.Color('#f4a126').convertSRGBToLinear()
+        camera.current.position.z = 20;
+    }, []);
     useFrame((state) => {
         if (!props.parent) return;
         const rx = props.parent.rotation.x;
@@ -194,7 +202,7 @@ function ParallaxCardLayers(props: { textures: THREE.Texture[] }) {
 
 function useStageControls() {
 
-    const { setViewMode, setBack, setBorder, setColor, setColors, exportAllSideBySide, randomPlay, saveColor, saveNewColor, downloadColors } = useStore(state => ({
+    const { setViewMode, setBack, setBorder, setColor, setColors, saveAllStatic, randomPlay, saveColor, saveNewColor, downloadColors, saveAllAnimated } = useStore(state => ({
         setViewMode: state.setViewMode,
         setBack: state.setBack,
         setBorder: state.setBorder,
@@ -203,8 +211,9 @@ function useStageControls() {
         saveNewColor: state.saveNewColor,
         downloadColors: state.downloadColors,
         saveColor: state.saveColor,
-        exportAllSideBySide: state.exportAllSideBySide,
+        saveAllStatic: state.saveAllStatic,
         randomPlay: state.randomPlay,
+        saveAllAnimated: state.saveAllAnimated,
     }), shallow);
 
     const color = useStore(state => ({ ...state.color }), shallow);
@@ -286,7 +295,11 @@ function useStageControls() {
         'overwrite colour': button(saveColor),
         'save as new colour': button(saveNewColor),
         'download colours': button(downloadColors),
-        'export side-by-sides': button(exportAllSideBySide),
+    }));
+
+    useControls('Export', () => ({
+        'export side-by-sides': button(saveAllStatic),
+        'export animated': button(saveAllAnimated),
         'random play': button(randomPlay),
     }));
 

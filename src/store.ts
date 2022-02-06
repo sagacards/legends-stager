@@ -1,16 +1,14 @@
 import React from 'react';
 import * as THREE from 'three';
-import { useLoader } from '@react-three/fiber';
 import create from 'zustand';
+//@ts-ignore
+import WebMWriter from 'webm-writer';
+//@ts-ignore
+import download from 'downloadjs';
 
-import Normal from 'art/common/normal.webp';
-import FoolFlat from 'art/0-the-fool/fool-flat.webp';
-import MagicianFlat from 'art/1-the-magician/magician-flat.webp';
 import colors from 'three/primitives/colors';
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
-const Fool = import.meta.glob('/src/art/0-the-fool/fool-layer-*.webp');
-const Magician = import.meta.glob('/src/art/1-the-magician/magician-layer-*.webp');
 
 export type ViewMode = 'side-by-side' | 'animated' | 'free';
 
@@ -26,6 +24,12 @@ export interface Texture {
     name: string;
     path: string;
 };
+
+interface CaptureContext {
+    camera  : THREE.Camera;
+    scene   : THREE.Scene;
+    gl      : THREE.WebGLRenderer;
+ };
 
 interface Store {
     
@@ -61,12 +65,16 @@ interface Store {
     setBorder   : (b : Texture) => void;
 
     // Exporting
-    capture?    : [THREE.Camera, THREE.Scene, THREE.WebGLRenderer];
-    setCapture  : (capture : [THREE.Camera, THREE.Scene, THREE.WebGLRenderer]) => void;
-    exportAllSideBySide: () => void;
-    saveImage   : (name: string) => void;
-    randomPlaying?: number;
-    randomPlay  : () => void;
+    exporting       : boolean;
+    capture?        : CaptureContext;
+    setCapture      : (capture : CaptureContext) => void;
+    saveStatic      : (name: string) => void;
+    saveAllStatic   : () => void;
+    rotation?       : [number, number, number];
+    saveAnimated    : () => void;
+    saveAllAnimated : () => void;
+    randomPlaying?  : number;
+    randomPlay      : () => void;
 
 };
 
@@ -75,6 +83,10 @@ const borders = importArt(Borders);
 const localColors = (window.localStorage.getItem('colors'))
     ? JSON.parse(window.localStorage.getItem('colors') as string) as Color[]
     : colors;
+
+let resolver : () => void = () => {};
+const frames = 60 * 1 // 12;
+let i = -60;
 
 const useStore = create<Store>((set, get) => {
     return {
@@ -165,9 +177,35 @@ const useStore = create<Store>((set, get) => {
             set({ border });
         },
 
+        exporting : false,
+
         setCapture (capture) { set({ capture })},
 
-        async exportAllSideBySide () {
+        async saveStatic(name: string) {
+            const capture = get().capture;
+            if (!capture) {
+                console.error(`Can't capture, no rendering context.`);
+                return;
+            }
+            await delay(500);
+            capture.gl.domElement.getContext('webgl', { preserveDrawingBuffer: true });
+            capture.gl.render(capture.scene, capture.camera);
+            await capture.gl.domElement.toBlob(
+                async function (blob) {
+                    if (!blob) return;
+                    var a = document.createElement('a');
+                    var url = await URL.createObjectURL(blob);
+                    a.href = url;
+                    a.download = name;
+                    await a.click();
+                },
+                'image/png',
+                1.0
+            )
+            capture.gl.domElement.getContext('webgl', { preserveDrawingBuffer: false });
+        },
+
+        async saveAllStatic () {
             const backs = get().backs;
             const borders = get().borders;
             const colors = get().colors;
@@ -188,41 +226,16 @@ const useStore = create<Store>((set, get) => {
                     set({ border });
                     for (const color of colors) {
                         set({ color });
-                        const name = `preview-side-by-side-${back.name.toLowerCase()}-${border.name.toLowerCase()}-${color.name.toLowerCase()}.png`;
+                        const name = `preview-side-by-side-${get().back.name.toLowerCase().replaceAll('-', '_')}-${get().border.name.toLowerCase().replaceAll('-', '_')}-${get().color.name.toLowerCase().replaceAll('-', '_')}.png`;
                         if (false) {
                             // variants.includes(name);
                             continue;
                         }
                         console.info(`render ${name}`);
-                        await get().saveImage(name);
+                        await get().saveStatic(name);
                     };
                 };
             };
-        },
-
-        async saveImage(name: string) {
-            await delay(500);
-            const capture = get().capture;
-            if (!capture) {
-                console.error(`Can't capture, no rendering context.`);
-                return;
-            }
-            const [camera, scene, gl] = capture;
-            gl.domElement.getContext('webgl', { preserveDrawingBuffer: true });
-            gl.render(scene, camera);
-            await gl.domElement.toBlob(
-                async function (blob) {
-                    if (!blob) return;
-                    var a = document.createElement('a');
-                    var url = await URL.createObjectURL(blob);
-                    a.href = url;
-                    a.download = name;
-                    await a.click();
-                },
-                'image/png',
-                1.0
-            )
-            gl.domElement.getContext('webgl', { preserveDrawingBuffer: false });
         },
 
         randomPlay () {
@@ -242,6 +255,57 @@ const useStore = create<Store>((set, get) => {
                 set({ back, border, color });
             }, 250);
             set({ randomPlaying : i });
+        },
+
+        saveAnimated () {
+            const capture = get().capture;
+            if (!capture) {
+                console.error(`Can't capture, no rendering context.`);
+                return;
+            }
+            
+            const start = new Date();
+            console.log(`${start.toLocaleTimeString()} Rendering ${frames} frames...`);
+            
+            const capturer = new WebMWriter({
+                quality: 0.75,
+                frameRate: 15,
+            });
+
+            i = -60;
+
+            set({ exporting: true, viewMode: 'animated' });
+            
+            function render () {
+                if (!capture) {
+                    console.error(`Can't capture, no rendering context.`);
+                    return;
+                }
+                set({ rotation: [0, -((i / frames) * Math.PI * 2) % (Math.PI * 2) + Math.PI, 0] });
+                capture.gl.render(capture.scene, capture.camera);
+                i++;
+                if (i >= 0) capturer.addFrame(capture.gl.domElement);
+                if (i < frames) {
+                    requestAnimationFrame(render);
+                } else {
+                    const name = `preview-animated-${get().back.name.toLowerCase().replaceAll('-', '_')}-${get().border.name.toLowerCase().replaceAll('-', '_')}-${get().color.name.toLowerCase().replaceAll('-', '_')}.webm`;
+                    capturer.complete()
+                    .then(function(blob : any) {
+                        download(blob, name, 'video/webm');
+                    });
+                    console.log(`Done. Took ${(new Date().getTime() - start.getTime()) / 1000} seconds.`)
+                    set({ rotation : undefined, exporting: false, });
+                    if (resolver) resolver();
+                }
+            }
+
+            render();
+
+            return new Promise<void>(resolve => resolver = resolve);
+        },
+
+        saveAllAnimated () {
+            get().saveAnimated()
         },
     }
 });
