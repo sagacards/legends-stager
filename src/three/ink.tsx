@@ -1,3 +1,4 @@
+import { useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import {
     useGoldLeafNormal,
@@ -21,13 +22,14 @@ export default function CardInk({
     specular,
     side,
 } : Props) {
-    const [[border]] = useCardBorders();
+    const [border] = useCardBorders();
+    const f = useLoader(THREE.TextureLoader, border.path)
     return (
         <>
-            <mesh position={[0, 0, 0.0265 * (side === THREE.BackSide ? -1 : 1)]}>
+            <mesh position={[0, 0, 0.01 * (side === THREE.BackSide ? -1 : 1)]}>
                 <planeGeometry args={[2.75, 4.75]} />
                 <meshPhongMaterial
-                    alphaMap={alpha || border}
+                    alphaMap={alpha || f}
                     transparent={true}
                     color={color}
                     emissive={emissive}

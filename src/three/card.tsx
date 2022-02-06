@@ -1,10 +1,5 @@
 import React from 'react';
 import * as THREE from 'three';
-import { useSpringRef } from '@react-spring/core';
-import { animated, useSpring } from '@react-spring/three';
-
-import { cardSpringConf } from 'three/primitives/springs';
-import { useControls } from 'leva';
 import { GroupProps, useFrame } from '@react-three/fiber';
 import { useCardGeometry } from './primitives/geometry';
 
@@ -61,31 +56,11 @@ export default function Card ({
 } : CardProps) {
 
     const mesh = React.useRef<THREE.Mesh>();
-    const spring = useSpringRef();
-
-    // Initialize spring animated parameters
-    // We start the card transparent and down a little bit
-    const springProps = useSpring({
-        ref: spring,
-        opacity: 0,
-        position: [0, -0.5, 0],
-        config: cardSpringConf
-    });
-
-    // Loading animation when component mounts
-    React.useEffect(() => {
-        spring.start({
-            from: { opacity: 0, position: [0, -0.5, 0] },
-            to: { opacity: 1, position: [0, 0, 0] },
-            config: cardSpringConf
-        });
-    }, [spring]);
 
     return <Suspended>
-        {/* @ts-ignore: react spring makes typescript complain about its animated values */}
-        <animated.group {...springProps}>
-            <animated.group {...props}>
-                <animated.mesh
+        <group>
+            <group {...props}>
+                <mesh
                     onPointerEnter={onPointerEnter}
                     onPointerLeave={onPointerLeave}
                     geometry={useCardGeometry()}
@@ -93,14 +68,13 @@ export default function Card ({
                     castShadow
                     receiveShadow
                 >
-                    {materials || <animated.meshPhongMaterial
+                    {materials || <meshPhongMaterial
                         transparent
-                        opacity={springProps.opacity}
                         color={"#000"}
                     />}
-                </animated.mesh>
+                </mesh>
                 {props.children}
-            </animated.group>
-        </animated.group>
+            </group>
+        </group>
     </Suspended>
 };

@@ -17,10 +17,12 @@
     "react-dom": "^17.0.0",
     "react-router-dom": "^6.0.2",
     "styled-components": "^5.3.3",
-    "three": "^0.134.0",
-    "webm-writer": "^1.0.0"
+    "three": "^0.137.5",
+    "webm-writer": "^1.0.0",
+    "zustand": "^3.6.9"
   },
   "devDependencies": {
+    "@react-three/drei": "^8.8.1",
     "@types/ccapture.js": "^1.1.1",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
