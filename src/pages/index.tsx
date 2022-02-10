@@ -8,7 +8,7 @@ import Card from 'three/card';
 import CardInk from 'three/ink';
 import colors from 'three/primitives/colors';
 import { cardDimensions, textureSize } from 'three/primitives/geometry';
-import { SideBySide } from 'three/primitives/lights';
+import { SideBySide, Sun } from 'three/primitives/lights';
 import { useGoldLeafNormal, useTheMagicianLayers } from 'three/primitives/textures';
 import shallow from 'zustand/shallow'
 import { Store } from 'leva/dist/declarations/src/store';
@@ -17,6 +17,8 @@ let colorBase = new THREE.Color(colors[0].base).convertSRGBToLinear();
 let colorSpecular = new THREE.Color(colors[0].specular).convertSRGBToLinear();
 let colorEmissive = new THREE.Color(colors[0].emissive).convertSRGBToLinear();
 let colorBackground = new THREE.Color(colors[0].background).convertSRGBToLinear();
+
+const lights = [SideBySide, Sun];
 
 const center = new THREE.Object3D();
 center.position.set(0, 0, 0);
@@ -32,7 +34,7 @@ function StagingScene() {
     }, []);
 
     // Initialize stage controls
-    useStageControls();
+    const [modeControl] = useStageControls();
 
     // Refs
     const mainCard = React.useRef<THREE.Mesh>()
@@ -82,12 +84,12 @@ function StagingScene() {
         </group>}
 
         {store.viewMode === 'free'
-            ? <group position={[0, 0, 1]}><PresentationControls
+            ? <group position={[0, 0, 1]} rotation={[0, 0, 0]}><PresentationControls
                 polar={[-Math.PI / 10, Math.PI / 10]}
             >{x}</PresentationControls></group>
             : x
         }
-        <mesh position={[0, 0, -1]}>
+        {modeControl.background && <mesh position={[0, 0, -1]}>
             <planeGeometry args={[10, 10]} />
             <meshStandardMaterial
                 normalMap={useGoldLeafNormal()}
@@ -95,9 +97,9 @@ function StagingScene() {
                 normalScale={[0.03, 0.03]}
                 color={'#000'}
             />
-        </mesh>
+        </mesh>}
         <spotLight color={colorBackground} angle={5} penumbra={Math.PI / 4} decay={0} target={center} position={[0, -5, 0]} intensity={5} />
-        <SideBySide />
+        {lights[modeControl.lights]()}
     </>
 };
 
@@ -203,7 +205,7 @@ function ParallaxCardLayers(props: { textures: THREE.Texture[] }) {
 
 function useStageControls() {
 
-    const { setViewMode, setBack, setBorder, setColor, setColors, saveAllStatic, randomPlay, saveColor, saveNewColor, downloadColors, saveAllAnimated, setVariant, addVariant, downloadVariants } = useStore(state => ({
+    const { setViewMode, setBack, setBorder, setColor, setColors, saveAllStatic, randomPlay, saveColor, saveNewColor, downloadColors, saveAllAnimated, setVariant, addVariant, downloadVariants, saveStatic, saveAnimated, exportSampler } = useStore(state => ({
         setViewMode: state.setViewMode,
         setBack: state.setBack,
         setBorder: state.setBorder,
@@ -218,6 +220,9 @@ function useStageControls() {
         setVariant: state.setVariant,
         addVariant: state.addVariant,
         downloadVariants: state.downloadVariants,
+        saveStatic: state.saveStatic,
+        saveAnimated: state.saveAnimated,
+        exportSampler: state.exportSampler,
     }), shallow);
 
     const color = useStore(state => ({ ...state.color }), shallow);
@@ -232,11 +237,22 @@ function useStageControls() {
     // View Mode //
 
 
-    const [modeControl, setModeControl] = useControls(() => ({
+    const [modeControl, setModeControl] = useControls('Scene', () => ({
         mode: {
             label: 'View Mode',
             options: ['side-by-side', 'animated', 'free']
         },
+        background: {
+            label: 'Show BG',
+            value: true
+        },
+        lights: {
+            label: 'Lights',
+            value: 0,
+            max: lights.length - 1,
+            min: 0,
+            step: 1
+        }
     }));
 
     React.useEffect(() => {
@@ -305,9 +321,12 @@ function useStageControls() {
     }));
 
     useControls('Export', () => ({
-        'export side-by-sides': button(saveAllStatic),
-        'export animated': button(saveAllAnimated),
+        'export all side-by-sides': button(saveAllStatic),
+        'export all animated': button(saveAllAnimated),
+        'export side-by-side': button(saveStatic),
+        'export animated': button(saveAnimated),
         'random play': button(randomPlay),
+        'export sampler': button(exportSampler),
     }));
 
     React.useEffect(() => {
@@ -363,6 +382,8 @@ function useStageControls() {
     React.useEffect(() => {
         setVariant(variants[variantControls.variant]);
     }, [variantControls]);
+
+    return [modeControl]
 };
 
 export default function StagingPage() {
