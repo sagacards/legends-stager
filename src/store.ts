@@ -223,6 +223,7 @@ const useStore = create<Store>((set, get) => {
         setCapture (capture) { set({ capture })},
 
         async saveStatic() {
+            await delay(500);
             const viewmode = get().viewMode;
             get().setViewMode('side-by-side');
             const capture = get().capture;
@@ -230,7 +231,6 @@ const useStore = create<Store>((set, get) => {
                 console.error(`Can't capture, no rendering context.`);
                 return;
             }
-            await delay(500);
             capture.gl.domElement.getContext('webgl', { preserveDrawingBuffer: true });
             capture.gl.render(capture.scene, capture.camera);
             await capture.gl.domElement.toBlob(
@@ -238,7 +238,7 @@ const useStore = create<Store>((set, get) => {
                     if (!blob) return;
                     var a = document.createElement('a');
                     var url = await URL.createObjectURL(blob);
-                    const name = `preview-side-by-side-${get().back.name.toLowerCase().replaceAll('-', '_')}-${get().border.name.toLowerCase().replaceAll('-', '_')}-${get().color.name.toLowerCase().replaceAll('-', '_')}.png`;
+                    const name = `preview-side-by-side-${get().back.name.toLowerCase().replaceAll('back-', '')}-${get().border.name.toLowerCase().replaceAll('border-', '')}-${get().color.name.toLowerCase().replaceAll(' ', '-')}.png`;
                     a.href = url;
                     a.download = name;
                     await a.click();
@@ -248,12 +248,12 @@ const useStore = create<Store>((set, get) => {
                 1.0
             )
             capture.gl.domElement.getContext('webgl', { preserveDrawingBuffer: false });
+            await delay(500);
         },
 
         async saveAllStatic () {
-            const backs = get().backs;
-            const borders = get().borders;
-            const colors = get().colors;
+            const variants = get().variants;
+            const setVariant = get().setVariant;
             const capture = get().capture;
 
             if (!capture) {
@@ -265,21 +265,11 @@ const useStore = create<Store>((set, get) => {
             for (const back of backs) { await delay(100); set({ back }) };
             for (const border of borders) { await delay(100); set({ border }) };
 
-            for (const back of backs) {
-                set({ back });
-                for (const border of borders) {
-                    set({ border });
-                    for (const color of colors) {
-                        set({ color });
-                        const name = `preview-side-by-side-${get().back.name.toLowerCase().replaceAll('-', '_')}-${get().border.name.toLowerCase().replaceAll('-', '_')}-${get().color.name.toLowerCase().replaceAll('-', '_').replaceAll(' ', '_')}.png`;
-                        if (false) {
-                            // variants.includes(name);
-                            continue;
-                        }
-                        console.info(`render ${name}`);
-                        await get().saveStatic();
-                    };
-                };
+            for (const variant of variants) {
+                setVariant(variant);
+                const name = `preview-side-by-side-${get().back.name.toLowerCase().replaceAll('back-', '')}-${get().border.name.toLowerCase().replaceAll('border-', '')}-${get().color.name.toLowerCase().replaceAll(' ', '-')}.png`;
+                console.info(`render ${name}`);
+                await get().saveStatic();
             };
         },
 
@@ -347,7 +337,7 @@ const useStore = create<Store>((set, get) => {
                 if (i < frames * 2) {
                     requestAnimationFrame(render);
                 } else {
-                    const name = `preview-animated-${get().back.name.toLowerCase().replaceAll('-', '_')}-${get().border.name.toLowerCase().replaceAll('-', '_')}-${get().color.name.toLowerCase().replaceAll('-', '_').replaceAll(' ', '_')}.webm`;
+                    const name = `preview-animated-${get().back.name.toLowerCase().replaceAll('back-', '')}-${get().border.name.toLowerCase().replaceAll('border-', '')}-${get().color.name.toLowerCase().replaceAll(' ', '_')}.webm`;
                     capturer.complete()
                     .then(function(blob : any) {
                         download(blob, name, 'video/webm');
@@ -399,7 +389,7 @@ const useStore = create<Store>((set, get) => {
                 if (i < frames) {
                     requestAnimationFrame(render);
                 } else {
-                    const name = `preview-animated-${get().back.name.toLowerCase().replaceAll('-', '_')}-${get().border.name.toLowerCase().replaceAll('-', '_')}-${get().color.name.toLowerCase().replaceAll('-', '_').replaceAll(' ', '_')}.webm`;
+                    const name = `preview-animated-${get().back.name.toLowerCase().replaceAll('back-', '')}-${get().border.name.toLowerCase().replaceAll('border-', '')}-${get().color.name.toLowerCase().replaceAll(' ', '-')}.webm`;
                     capturer.complete()
                     .then(function(blob : any) {
                         download(blob, name, 'video/webm');
@@ -431,7 +421,7 @@ const useStore = create<Store>((set, get) => {
 
             for (const variant of variants) {
                 setVariant(variant);
-                const name = `preview-side-by-side-${get().back.name.toLowerCase().replaceAll('-', '_')}-${get().border.name.toLowerCase().replaceAll('-', '_')}-${get().color.name.toLowerCase().replaceAll('-', '_')}.png`;
+                const name = `preview-animated-${get().back.name.toLowerCase().replaceAll('back-', '')}-${get().border.name.toLowerCase().replaceAll('border-', '')}-${get().color.name.toLowerCase().replaceAll(' ', '-')}.png`;
                 console.info(`render ${name}`);
                 await get().saveAnimated()
             };
