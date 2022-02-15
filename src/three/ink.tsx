@@ -13,6 +13,8 @@ interface Props {
     emissive: THREE.Color;
     specular: THREE.Color;
     side?: THREE.Side;
+    normal?: THREE.Texture | false;
+    shininess?: number;
 };
 
 export default function CardInk({
@@ -21,12 +23,15 @@ export default function CardInk({
     emissive,
     specular,
     side,
+    normal,
+    shininess,
 } : Props) {
     const [border] = useCardBorders();
     const f = useLoader(THREE.TextureLoader, border.path)
+    const z = normal === false ? null : normal ? normal : useGoldLeafNormal()
     return (
         <>
-            <mesh position={[0, 0, 0.01 * (side === THREE.BackSide ? -1 : 1)]}>
+            <mesh position={[0, 0, 0.007 * (side === THREE.BackSide ? -1 : 1)]}>
                 <planeGeometry args={[2.75, 4.75]} />
                 <meshPhongMaterial
                     alphaMap={alpha || f}
@@ -35,8 +40,8 @@ export default function CardInk({
                     emissive={emissive}
                     emissiveIntensity={0.125}
                     specular={specular}
-                    shininess={200}
-                    normalMap={useGoldLeafNormal()}
+                    shininess={shininess || 200}
+                    normalMap={z}
                     // @ts-ignore
                     normalScale={[0.05, 0.05]}
                     side={side || THREE.FrontSide}

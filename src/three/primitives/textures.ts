@@ -8,6 +8,7 @@ import Normal from 'art/common/normal.webp';
 import FoolFlat from 'art/0-the-fool/fool-flat.webp';
 import MagicianFlat from 'art/1-the-magician/magician-flat.webp';
 import { Texture } from 'src/store';
+import CinematicCover from 'art/1-the-magician/cinematic-cover.webp';
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
 const Fool = import.meta.glob('/src/art/0-the-fool/fool-layer-*.webp');
@@ -77,3 +78,7 @@ export function useArt (modules : Record<string, () => Promise<{ [key: string]: 
         .map(x => ({ path: x[0], name: x[1]})) as Texture[]
     , []);
 }
+
+export function useCinematicCover() {
+    return useLoader(THREE.TextureLoader, CinematicCover);
+};

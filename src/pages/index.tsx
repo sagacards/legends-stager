@@ -9,7 +9,7 @@ import CardInk from 'three/ink';
 import colors from 'three/primitives/colors';
 import { cardDimensions, textureSize } from 'three/primitives/geometry';
 import { SideBySide, Sun } from 'three/primitives/lights';
-import { useGoldLeafNormal, useTheMagicianLayers } from 'three/primitives/textures';
+import { useCinematicCover, useGoldLeafNormal, useTheMagicianLayers } from 'three/primitives/textures';
 import shallow from 'zustand/shallow'
 import { Store } from 'leva/dist/declarations/src/store';
 
@@ -65,6 +65,21 @@ function StagingScene() {
         <ParallaxCardFace parent={mainCard.current} />
     </group>;
 
+    const back = store.back.name === 'back-cinematic' ? <CardInk
+        side={THREE.BackSide}
+        color={colorBase}
+        emissive={colorEmissive}
+        specular={colorSpecular}
+        normal={false}
+        alpha={useLoader(THREE.TextureLoader, store.back.path)}
+    /> : <CardInk
+        side={THREE.BackSide}
+        color={colorBase}
+        emissive={colorEmissive}
+        specular={colorSpecular}
+        alpha={useLoader(THREE.TextureLoader, store.back.path)}
+    />
+
     return <>
         {store.viewMode === 'side-by-side' && <group ref={secondaryCard} position={[1.5, 0, 1]} rotation={[0, Math.PI + Math.PI * .1, 0]}>
             <Card
@@ -72,13 +87,7 @@ function StagingScene() {
                     <meshStandardMaterial attachArray="material" color={"#111"} />
                 </>}
                 children={<>
-                    <CardInk
-                        side={THREE.BackSide}
-                        color={colorBase}
-                        emissive={colorEmissive}
-                        specular={colorSpecular}
-                        alpha={useLoader(THREE.TextureLoader, store.back.path)}
-                    />
+                    {back}
                 </>}
             />
         </group>}
@@ -140,9 +149,51 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         state.gl.render(scene.current, camera.current);
         state.gl.setRenderTarget(null);
     });
+    
+    const back = store.back.name === 'back-cinematic' ? <CardInk
+        side={THREE.BackSide}
+        color={colorBase}
+        emissive={colorEmissive}
+        specular={colorSpecular}
+        normal={false}
+        alpha={useLoader(THREE.TextureLoader, store.back.path)}
+    /> : <CardInk
+        side={THREE.BackSide}
+        color={colorBase}
+        emissive={colorEmissive}
+        specular={colorSpecular}
+        alpha={useLoader(THREE.TextureLoader, store.back.path)}
+    />;
+    const border = store.border.name === 'border-cinematic' ? <>
+        <CardInk
+            side={THREE.FrontSide}
+            color={'#121212'}
+            emissive={'#121212'}
+            specular={'#121212'}
+            alpha={useCinematicCover()}
+            shininess={100}
+            normal={false}
+        />
+        <CardInk
+            side={THREE.FrontSide}
+            color={colorBase}
+            emissive={colorEmissive}
+            specular={colorSpecular}
+            alpha={useLoader(THREE.TextureLoader, store.border.path)}
+            normal={false}
+        />
+    </> : <CardInk
+        side={THREE.FrontSide}
+        color={colorBase}
+        emissive={colorEmissive}
+        specular={colorSpecular}
+        alpha={useLoader(THREE.TextureLoader, store.border.path)}
+    />
+
+    const scale = store.border.name === 'border-cinematic' ? .85 : 1;
 
     return <>
-        {createPortal(<ParallaxCardLayers textures={useTheMagicianLayers().map(x => useLoader(THREE.TextureLoader, x.path)).slice(0, 5)} />, scene.current)}
+        {createPortal(<ParallaxCardLayers scale={scale} textures={useTheMagicianLayers().map(x => useLoader(THREE.TextureLoader, x.path)).slice(0, 5)} />, scene.current)}
         <Card
             materials={<>
                 <meshStandardMaterial attachArray="material" color={"#111"} />
@@ -166,27 +217,15 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
                 />
             </>}
             children={<>
-                <CardInk
-                    side={THREE.FrontSide}
-                    color={colorBase}
-                    emissive={colorEmissive}
-                    specular={colorSpecular}
-                    alpha={useLoader(THREE.TextureLoader, store.border.path)}
-                />
-                <CardInk
-                    side={THREE.BackSide}
-                    color={colorBase}
-                    emissive={colorEmissive}
-                    specular={colorSpecular}
-                    alpha={useLoader(THREE.TextureLoader, store.back.path)}
-                />
+                {border}
+                {back}
             </>}
         />
     </>
 };
 
-function ParallaxCardLayers(props: { textures: THREE.Texture[] }) {
-    const geometry = React.useMemo(() => new THREE.PlaneGeometry(textureSize[0] * e, textureSize[1] * e), []);
+function ParallaxCardLayers(props: { textures: THREE.Texture[], scale?: number }) {
+    const geometry = React.useMemo(() => new THREE.PlaneGeometry(textureSize[0] * e * (props.scale || 1), textureSize[1] * e * (props.scale || 1)), []);
     return (
         <group>
             {props.textures.map((t, i) => <mesh position={[0, 0, (-18 / props.textures.length) * i]} key={`tex${i}`} geometry={geometry}>
