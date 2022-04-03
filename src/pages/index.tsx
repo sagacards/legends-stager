@@ -322,8 +322,8 @@ function useStageControls() {
         getData(seriesControls.series).then(({ colors, variants, cardArt }) => {
             // Push series updates to store
             setColors(colors);
-            setVariant(variants[0])
             setVariants(variants);
+            setVariant(variants[0]);
             setCardArt(cardArt);
             setSeries(seriesControls.series);
 
