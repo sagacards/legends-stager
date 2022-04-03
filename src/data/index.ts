@@ -25,7 +25,7 @@ export interface Color {
 const AllSeries = {
     "0-the-fool"            : undefined,
     "1-the-magician"        : undefined,
-    "2-the-high-preistess"  : undefined,
+    "2-the-high-priestess"  : undefined,
     "3-the-empress"         : undefined,
     "4-the-emperor"         : undefined,
     "5-the-hierophant"      : undefined,
@@ -33,7 +33,7 @@ const AllSeries = {
     "7-the-chariot"         : undefined,
     "8-strength"            : undefined,
     "9-the-hermit"          : undefined,
-    "10-wheel-of-forune"    : undefined,
+    "10-wheel-of-fortune"    : undefined,
     "11-justice"            : undefined,
     "12-the-hanged-man"     : undefined,
     "13-death"              : undefined,
@@ -116,9 +116,9 @@ export async function getData (
     variants = loadCsv<Variant>(VariantRow, await loadVariants(series));
 
     // Retrieve color and variants from localstorage
-    const localColors = window.localStorage.getItem(`${series}-colors`);
+    const localColors = window.localStorage.getItem(`colors-${series}`);
     if (localColors) colors = JSON.parse(localColors);
-    const localVariants = window.localStorage.getItem(`${series}-variants`);
+    const localVariants = window.localStorage.getItem(`variants-${series}`);
     if (localVariants) variants = JSON.parse(localVariants);
 
     return {
