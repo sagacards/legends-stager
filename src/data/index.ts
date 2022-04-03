@@ -22,32 +22,32 @@ export interface Color {
 };
 
 
-const AllSeries = [
-    "0-the-fool",
-    "1-the-magician",
-    "2-the-high-preistess",
-    "3-the-empress",
-    "4-the-emperor",
-    "5-the-hierophant",
-    "6-the-lovers",
-    "7-the-chariot",
-    "8-strength",
-    "9-the-hermit",
-    "10-wheel-of-forune",
-    "11-justice",
-    "12-the-hanged-man",
-    "13-death",
-    "14-temperance",
-    "15-the-devil",
-    "16-the-tower",
-    "17-the-star",
-    "18-the-moon",
-    "19-the-sun",
-    "20-judgement",
-    "21-the-world",
-];
+const AllSeries = {
+    "0-the-fool"            : undefined,
+    "1-the-magician"        : undefined,
+    "2-the-high-preistess"  : undefined,
+    "3-the-empress"         : undefined,
+    "4-the-emperor"         : undefined,
+    "5-the-hierophant"      : undefined,
+    "6-the-lovers"          : undefined,
+    "7-the-chariot"         : undefined,
+    "8-strength"            : undefined,
+    "9-the-hermit"          : undefined,
+    "10-wheel-of-forune"    : undefined,
+    "11-justice"            : undefined,
+    "12-the-hanged-man"     : undefined,
+    "13-death"              : undefined,
+    "14-temperance"         : undefined,
+    "15-the-devil"          : undefined,
+    "16-the-tower"          : undefined,
+    "17-the-star"           : undefined,
+    "18-the-moon"           : undefined,
+    "19-the-sun"            : undefined,
+    "20-judgement"          : undefined,
+    "21-the-world"          : undefined,
+};
 
-export const seriesIdentifiers = Object.values(AllSeries) as SeriesIdentifier[];
+export const seriesIdentifiers = Object.keys(AllSeries) as SeriesIdentifier[];
 
 export const defaultSeries = seriesIdentifiers[seriesIdentifiers.length - 1];
 
@@ -112,11 +112,14 @@ export async function getData (
     let variants    : Variant[] = [];
 
     // Retrieve color and variants from hardcoded data
-    colors = [...colors, ...(loadCsv<Color>(ColorRow, await loadColors(series)))];
-    variants = [...variants, ...(loadCsv<Variant>(VariantRow, await loadVariants(series)))];
+    colors = loadCsv<Color>(ColorRow, await loadColors(series));
+    variants = loadCsv<Variant>(VariantRow, await loadVariants(series));
 
     // Retrieve color and variants from localstorage
-    // TODO: this
+    const localColors = window.localStorage.getItem(`${series}-colors`);
+    if (localColors) colors = JSON.parse(localColors);
+    const localVariants = window.localStorage.getItem(`${series}-variants`);
+    if (localVariants) variants = JSON.parse(localVariants);
 
     return {
         cardArt,

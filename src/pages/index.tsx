@@ -322,6 +322,7 @@ function useStageControls() {
         getData(seriesControls.series).then(({ colors, variants, cardArt }) => {
             // Push series updates to store
             setColors(colors);
+            setVariant(variants[0])
             setVariants(variants);
             setCardArt(cardArt);
             setSeries(seriesControls.series);
@@ -387,7 +388,7 @@ function useStageControls() {
     const [colorControls, setColorControls] = useControls('Card Ink Color', () => ({
         preset: {
             label: 'Presets',
-            options: colorOptions,
+            options: colors.map(x => x.name),
         },
         name: {
             label: 'Name',
@@ -416,7 +417,7 @@ function useStageControls() {
         'overwrite colour': button(saveColor),
         'save as new colour': button(saveNewColor),
         'download colours': button(downloadColors),
-    }), [colorOptions]);
+    }), [colors, colorOptions]);
 
     React.useEffect(() => {
         // Push colour preset changes to store
@@ -477,6 +478,10 @@ function useStageControls() {
         if (!variants) return;
         setVariant(variants[variantControls.variant]);
     }, [variantControls]);
+
+    // React.useEffect(() => {
+    //     setVariantControls({ variant : variants.length - 1 })
+    // }, [variants])
 
 
     // Exporting //

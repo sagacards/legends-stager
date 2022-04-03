@@ -117,8 +117,9 @@ const useStore = create<Store>((set, get) => {
             set({ variants });
         },
         addVariant () {
-            const variants = [...get().variants, { back: get().back.name, border: get().border.name, ink: get().color.name }];
-            window.localStorage.setItem('variants', JSON.stringify(variants));
+            const { variants : existing, series, back, border, color } = get();
+            const variants = [...existing, { back: back.name.replace('back-', ''), border: border.name.replace('border-', ''), ink: color.name }];
+            window.localStorage.setItem(`${series}-variants`, JSON.stringify(variants));
             set({ variants });
         },
 
@@ -142,7 +143,7 @@ const useStore = create<Store>((set, get) => {
 
         colors: defaultSeriesData.colors,
         setColors (colors) {
-            window.localStorage.setItem('colors', JSON.stringify(colors));
+            window.localStorage.setItem(`${get().series}-colors`, JSON.stringify(colors));
             set({ colors });
         },
 
