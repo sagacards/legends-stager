@@ -2,17 +2,17 @@ import { Canvas, createPortal, useFrame, useLoader, useThree } from '@react-thre
 import { button, useControls } from 'leva';
 import { PresentationControls } from '@react-three/drei'
 import React from 'react';
-import useStore, { Texture, ViewMode } from 'src/store';
+import useStore, { ViewMode } from 'src/store';
 import * as THREE from 'three';
 import Card from 'three/card';
 import CardInk from 'three/ink';
 import { cardDimensions, textureSize } from 'three/primitives/geometry';
 import { SideBySide, Sun } from 'three/primitives/lights';
-import { useCinematicCover, useGoldLeafNormal, useTheMagicianLayers } from 'three/primitives/textures';
+import { useCinematicCover, useGoldLeafNormal } from 'three/primitives/textures';
 import shallow from 'zustand/shallow'
-import { Color, defaultSeries, getData, seriesIdentifiers } from 'data/index'
+import { Color, defaultSeries, getData, seriesIdentifiers, Texture } from 'data/index'
 
-const { colors : defaultColors, } = getData(defaultSeries);
+const { colors : defaultColors, } = await getData(defaultSeries);
 
 let colorBase = new THREE.Color(defaultColors[0].base).convertSRGBToLinear();
 let colorSpecular = new THREE.Color(defaultColors[0].specular).convertSRGBToLinear();
@@ -55,6 +55,9 @@ function StagingScene() {
         } else if (store.viewMode === 'animated') {
             mainCard.current.position.set(0, 0, .5);
             mainCard.current.rotation.set(0, (-state.clock.getElapsedTime() * .62) % (Math.PI * 2) + Math.PI, 0);
+        } else if (store.viewMode === 'pivot') {
+            mainCard.current.position.set(0, 0, .5);
+            mainCard.current.rotation.set(0, Math.sin(-state.clock.getElapsedTime()) * Math.PI * .10, 0);
         } else {
             mainCard.current.position.set(0, 0, 0);
             mainCard.current.rotation.set(0, 0, 0);
@@ -150,6 +153,11 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         state.gl.render(scene.current, camera.current);
         state.gl.setRenderTarget(null);
     });
+
+    const parallaxLayers = React.useMemo(() => {
+        const layers = store.cardArt.map(x => useLoader(THREE.TextureLoader, x.path));
+        return layers
+    }, [store.cardArt]);
     
     const back = store.back.name === 'back-cinematic' ? <CardInk
         side={THREE.BackSide}
@@ -165,6 +173,7 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         specular={colorSpecular}
         alpha={useLoader(THREE.TextureLoader, store.back.path)}
     />;
+
     const border = store.border.name === 'border-cinematic' ? <>
         <CardInk
             side={THREE.FrontSide}
@@ -247,6 +256,7 @@ function useStageControls() {
 
     const {
         setSeries,
+        setCardArt,
         setViewMode,
         setBack,
         setBorder,
@@ -267,6 +277,7 @@ function useStageControls() {
         exportSampler
     } = useStore(state => ({
         setSeries: state.setSeries,
+        setCardArt: state.setCardArt,
         setViewMode: state.setViewMode,
         setBack: state.setBack,
         setBorder: state.setBorder,
@@ -308,15 +319,16 @@ function useStageControls() {
     }));
 
     React.useEffect(() => {
-        const { colors, variants} = getData(seriesControls.series);
+        getData(seriesControls.series).then(({ colors, variants, cardArt }) => {
+            // Push series updates to store
+            setColors(colors);
+            setVariants(variants);
+            setCardArt(cardArt);
+            setSeries(seriesControls.series);
 
-        // Push series updates to store
-        setColors(colors);
-        setVariants(variants);
-        setSeries(seriesControls.series);
-
-        // Update control UI
-        setColorOptions(colors.map(x => x.name));
+            // Update control UI
+            setColorOptions(colors.map(x => x.name));
+        });
     }, [seriesControls]);
 
 
@@ -326,7 +338,7 @@ function useStageControls() {
     const [modeControl, setModeControl] = useControls('Scene', () => ({
         mode: {
             label: 'View Mode',
-            options: ['side-by-side', 'animated', 'free']
+            options: ['side-by-side', 'animated', 'free', 'pivot']
         },
         background: {
             label: 'Show BG',
@@ -462,6 +474,7 @@ function useStageControls() {
     }), [variants]);
 
     React.useEffect(() => {
+        if (!variants) return;
         setVariant(variants[variantControls.variant]);
     }, [variantControls]);
 

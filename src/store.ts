@@ -5,19 +5,13 @@ import create from 'zustand';
 import WebMWriter from 'webm-writer';
 //@ts-ignore
 import download from 'downloadjs';
-import { Variant, Color, getData, SeriesIdentifier, defaultSeries } from 'data/index'
+import { Variant, Color, getData, SeriesIdentifier, defaultSeries, Texture } from 'data/index'
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
 
-const defaultSeriesData = getData(defaultSeries);
-console.log(defaultSeriesData)
+const defaultSeriesData = await getData(defaultSeries);
 
-export type ViewMode = 'side-by-side' | 'animated' | 'free';
-
-export interface Texture {
-    name: string;
-    path: string;
-};
+export type ViewMode = 'side-by-side' | 'animated' | 'free' | 'pivot';
 
 interface CaptureContext {
     camera  : THREE.Camera;
@@ -34,6 +28,10 @@ interface Store {
     // Series
     series      : SeriesIdentifier;
     setSeries   : (s : SeriesIdentifier) => void;
+
+    // Card art
+    cardArt     : Texture[];
+    setCardArt  : (a : Texture[]) => void;
 
     // Card Ink Colors
     colors      : Color[];
@@ -85,13 +83,10 @@ interface Store {
     addVariant      : () => void;
     downloadVariants: () => void;
 
-
 };
 
 const backs = importArt(Backs);
 const borders = importArt(Borders);
-
-console.log(backs[0])
 
 let resolver : () => void = () => {};
 const frames = 60 * 1 // 12;
@@ -110,6 +105,11 @@ const useStore = create<Store>((set, get) => {
         series: defaultSeries,
         setSeries (series) {
             set({ series });
+        },
+
+        cardArt: defaultSeriesData.cardArt,
+        setCardArt (cardArt) {
+            set({ cardArt });
         },
 
         variants : defaultSeriesData.variants,
