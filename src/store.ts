@@ -5,21 +5,14 @@ import create from 'zustand';
 import WebMWriter from 'webm-writer';
 //@ts-ignore
 import download from 'downloadjs';
-
-import colors from 'three/primitives/colors';
-import variants, { Variant } from 'three/primitives/variants';
+import { Variant, Color, getData, SeriesIdentifier, defaultSeries } from 'data/index'
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
 
-export type ViewMode = 'side-by-side' | 'animated' | 'free';
+const defaultSeriesData = getData(defaultSeries);
+console.log(defaultSeriesData)
 
-export interface Color {
-    name    : string;
-    base    : string;
-    specular: string;
-    emissive: string;
-    background: string;
-};
+export type ViewMode = 'side-by-side' | 'animated' | 'free';
 
 export interface Texture {
     name: string;
@@ -37,6 +30,10 @@ interface Store {
     // Stager View Mode
     viewMode    : ViewMode;
     setViewMode : (m : ViewMode) => void;
+
+    // Series
+    series      : SeriesIdentifier;
+    setSeries   : (s : SeriesIdentifier) => void;
 
     // Card Ink Colors
     colors      : Color[];
@@ -84,6 +81,7 @@ interface Store {
 
     // Variants
     variants        : Variant[];
+    setVariants     : (v : Variant[]) => void;
     addVariant      : () => void;
     downloadVariants: () => void;
 
@@ -92,12 +90,8 @@ interface Store {
 
 const backs = importArt(Backs);
 const borders = importArt(Borders);
-const localColors = (window.localStorage.getItem('colors'))
-    ? JSON.parse(window.localStorage.getItem('colors') as string) as Color[]
-    : colors;
-const localVariants = (window.localStorage.getItem('variants'))
-    ? JSON.parse(window.localStorage.getItem('variants') as string) as Variant[]
-    : variants;
+
+console.log(backs[0])
 
 let resolver : () => void = () => {};
 const frames = 60 * 1 // 12;
@@ -113,18 +107,27 @@ const useStore = create<Store>((set, get) => {
             }
         },
 
-        variants : localVariants,
+        series: defaultSeries,
+        setSeries (series) {
+            set({ series });
+        },
+
+        variants : defaultSeriesData.variants,
+        setVariants (variants) {
+            set({ variants });
+        },
         addVariant () {
-            const variants = [...get().variants, { back: get().back.name, border: get().border.name, color: get().color.name }];
+            const variants = [...get().variants, { back: get().back.name, border: get().border.name, ink: get().color.name }];
             window.localStorage.setItem('variants', JSON.stringify(variants));
             set({ variants });
         },
 
-        variant : localVariants[0],
+        variant : defaultSeriesData.variants[0],
         setVariant (variant) {
-            const color = get().colors.find(x => x.name.toLowerCase() === variant.color.toLowerCase()) as Color;
-            const back = get().backs.find(x => x.name.toLowerCase() === variant.back.toLowerCase()) as Texture;
-            const border = get().borders.find(x => x.name.toLowerCase() === variant.border.toLowerCase()) as Texture;
+            const { colors, backs, borders } = get();
+            const color = colors.find(x => x.name.toLowerCase() === variant.ink.toLowerCase()) as Color;
+            const back = backs.find(x => x.name.toLowerCase() === `back-${variant.back.toLowerCase()}`) as Texture;
+            const border = borders.find(x => x.name.toLowerCase() === `border-${variant.border.toLowerCase()}`) as Texture;
             set({ variant, color, back, border });
         },
 
@@ -137,13 +140,13 @@ const useStore = create<Store>((set, get) => {
             await a.click();
         },
 
-        colors: localColors,
+        colors: defaultSeriesData.colors,
         setColors (colors) {
             window.localStorage.setItem('colors', JSON.stringify(colors));
             set({ colors });
         },
 
-        color: localColors[0],
+        color: defaultSeriesData.colors[0],
         setColor (color) {
             // console.info(`Active color changed. Name: ${color.name}, Base: ${color.base}, Specular: ${color.specular}, Emissive: ${color.emissive}`);
             set({ color });

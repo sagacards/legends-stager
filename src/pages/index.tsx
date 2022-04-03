@@ -1,22 +1,23 @@
-import { Canvas, createPortal, GroupProps, useFrame, useLoader, useThree } from '@react-three/fiber';
+import { Canvas, createPortal, useFrame, useLoader, useThree } from '@react-three/fiber';
 import { button, useControls } from 'leva';
-import { PresentationControls, TransformControls } from '@react-three/drei'
+import { PresentationControls } from '@react-three/drei'
 import React from 'react';
-import useStore, { Color, Texture, ViewMode } from 'src/store';
+import useStore, { Texture, ViewMode } from 'src/store';
 import * as THREE from 'three';
 import Card from 'three/card';
 import CardInk from 'three/ink';
-import colors from 'three/primitives/colors';
 import { cardDimensions, textureSize } from 'three/primitives/geometry';
 import { SideBySide, Sun } from 'three/primitives/lights';
 import { useCinematicCover, useGoldLeafNormal, useTheMagicianLayers } from 'three/primitives/textures';
 import shallow from 'zustand/shallow'
-import { Store } from 'leva/dist/declarations/src/store';
+import { Color, defaultSeries, getData, seriesIdentifiers } from 'data/index'
 
-let colorBase = new THREE.Color(colors[0].base).convertSRGBToLinear();
-let colorSpecular = new THREE.Color(colors[0].specular).convertSRGBToLinear();
-let colorEmissive = new THREE.Color(colors[0].emissive).convertSRGBToLinear();
-let colorBackground = new THREE.Color(colors[0].background).convertSRGBToLinear();
+const { colors : defaultColors, } = getData(defaultSeries);
+
+let colorBase = new THREE.Color(defaultColors[0].base).convertSRGBToLinear();
+let colorSpecular = new THREE.Color(defaultColors[0].specular).convertSRGBToLinear();
+let colorEmissive = new THREE.Color(defaultColors[0].emissive).convertSRGBToLinear();
+let colorBackground = new THREE.Color(defaultColors[0].background).convertSRGBToLinear();
 
 const lights = [SideBySide, Sun];
 
@@ -193,7 +194,7 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
     const scale = store.border.name === 'border-cinematic' ? .85 : 1;
 
     return <>
-        {createPortal(<ParallaxCardLayers scale={scale} textures={useTheMagicianLayers().map(x => useLoader(THREE.TextureLoader, x.path)).slice(0, 5)} />, scene.current)}
+        {createPortal(<ParallaxCardLayers scale={scale} textures={parallaxLayers} />, scene.current)}
         <Card
             materials={<>
                 <meshStandardMaterial attachArray="material" color={"#111"} />
@@ -244,7 +245,28 @@ function ParallaxCardLayers(props: { textures: THREE.Texture[], scale?: number }
 
 function useStageControls() {
 
-    const { setViewMode, setBack, setBorder, setColor, setColors, saveAllStatic, randomPlay, saveColor, saveNewColor, downloadColors, saveAllAnimated, setVariant, addVariant, downloadVariants, saveStatic, saveAnimated, exportSampler } = useStore(state => ({
+    const {
+        setSeries,
+        setViewMode,
+        setBack,
+        setBorder,
+        setColor,
+        setColors,
+        saveAllStatic,
+        randomPlay,
+        saveColor,
+        saveNewColor,
+        downloadColors,
+        saveAllAnimated,
+        setVariant,
+        setVariants,
+        addVariant,
+        downloadVariants,
+        saveStatic,
+        saveAnimated,
+        exportSampler
+    } = useStore(state => ({
+        setSeries: state.setSeries,
         setViewMode: state.setViewMode,
         setBack: state.setBack,
         setBorder: state.setBorder,
@@ -257,6 +279,7 @@ function useStageControls() {
         randomPlay: state.randomPlay,
         saveAllAnimated: state.saveAllAnimated,
         setVariant: state.setVariant,
+        setVariants: state.setVariants,
         addVariant: state.addVariant,
         downloadVariants: state.downloadVariants,
         saveStatic: state.saveStatic,
@@ -271,6 +294,30 @@ function useStageControls() {
     const borders = useStore(state => ([...state.borders]), shallow);
     const colors = useStore(state => ([...state.colors]), shallow);
     const variants = useStore(state => ([...state.variants]), shallow);
+
+
+    // Series //
+
+
+    const [seriesControls, setSeriesControls] = useControls('Series', () => ({
+        series: {
+            label: 'Series',
+            value: defaultSeries,
+            options: seriesIdentifiers,
+        }
+    }));
+
+    React.useEffect(() => {
+        const { colors, variants} = getData(seriesControls.series);
+
+        // Push series updates to store
+        setColors(colors);
+        setVariants(variants);
+        setSeries(seriesControls.series);
+
+        // Update control UI
+        setColorOptions(colors.map(x => x.name));
+    }, [seriesControls]);
 
 
     // View Mode //
@@ -357,25 +404,17 @@ function useStageControls() {
         'overwrite colour': button(saveColor),
         'save as new colour': button(saveNewColor),
         'download colours': button(downloadColors),
-    }));
-
-    useControls('Export', () => ({
-        'export all side-by-sides': button(saveAllStatic),
-        'export all animated': button(saveAllAnimated),
-        'export side-by-side': button(saveStatic),
-        'export animated': button(saveAnimated),
-        'random play': button(randomPlay),
-        'export sampler': button(exportSampler),
-    }));
+    }), [colorOptions]);
 
     React.useEffect(() => {
         // Push colour preset changes to store
         const color = colors.find(x => x.name === colorControls.preset) as Color;
+        if (color === undefined) return;
         setColor(color);
 
         // Update colour controls
         setColorControls(color);
-    }, [colorControls.preset]);
+    }, [colors, colorControls.preset]);
 
     React.useEffect(() => {
         // Push colour changes to store
@@ -404,7 +443,11 @@ function useStageControls() {
             setColorControls({ preset: state.color.name });
             setTextureControl({ back : state.back.name, border : state.border.name })
         };
-    }), []);
+    }), [colorOptions]);
+
+
+    // Variants //
+
 
     const [variantControls, setVariantControls] = useControls('Variants', () => ({
         variant: {
@@ -416,11 +459,24 @@ function useStageControls() {
         },
         'add variant': button(addVariant),
         'download variants': button(downloadVariants),
-    }));
+    }), [variants]);
 
     React.useEffect(() => {
         setVariant(variants[variantControls.variant]);
     }, [variantControls]);
+
+
+    // Exporting //
+
+
+    useControls('Export', () => ({
+        'export all side-by-sides': button(saveAllStatic),
+        'export all animated': button(saveAllAnimated),
+        'export side-by-side': button(saveStatic),
+        'export animated': button(saveAnimated),
+        'random play': button(randomPlay),
+        'export sampler': button(exportSampler),
+    }));
 
     return [modeControl]
 };
