@@ -8,6 +8,7 @@ import download from 'downloadjs';
 import { Variant, Color, getData, SeriesIdentifier, defaultSeries, Texture } from 'data/index'
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
+const Masks = import.meta.glob('/src/art/common/mask-*.*');
 
 const defaultSeriesData = await getData(defaultSeries);
 
@@ -55,10 +56,13 @@ interface Store {
 
     // Card Borders
     borders     : Texture[];
-
-    // Active Border
     border      : Texture;
     setBorder   : (b : Texture) => void;
+
+    // Masks
+    masks       : Texture[];
+    mask?       : Texture;
+    setMask     : (m : Texture) => void;
 
     // Exporting
     exporting       : boolean;
@@ -87,6 +91,7 @@ interface Store {
 
 const backs = importArt(Backs);
 const borders = importArt(Borders);
+const masks = importArt(Masks);
 
 let resolver : () => void = () => {};
 const frames = 60 * 1 // 12;
@@ -117,8 +122,7 @@ const useStore = create<Store>((set, get) => {
             set({ variants });
         },
         addVariant () {
-            const { variants : existing, series, back, border, color } = get();
-            const variants = [...existing, { back: back.name.replace('back-', ''), border: border.name.replace('border-', ''), ink: color.name }];
+            const { variants : existing, series, back, border, color, mask, stock } = get();
             window.localStorage.setItem(`variants-${series}`, JSON.stringify(variants));
             set({ variants });
         },
@@ -129,7 +133,8 @@ const useStore = create<Store>((set, get) => {
             const color = colors.find(x => x.name.toLowerCase() === variant.ink.toLowerCase()) as Color;
             const back = backs.find(x => x.name.toLowerCase() === `back-${variant.back.toLowerCase()}`) as Texture;
             const border = borders.find(x => x.name.toLowerCase() === `border-${variant.border.toLowerCase()}`) as Texture;
-            set({ variant, color, back, border });
+            const mask = masks.find(x => x.name.toLowerCase() === `${variant?.mask?.toLowerCase()}`) as Texture;
+            set({ variant, color, back, border, mask, stock });
         },
 
         async downloadVariants () {

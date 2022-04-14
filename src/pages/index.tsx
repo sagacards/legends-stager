@@ -260,6 +260,7 @@ function useStageControls() {
         setViewMode,
         setBack,
         setBorder,
+        setMask,
         setColor,
         setColors,
         saveAllStatic,
@@ -281,6 +282,7 @@ function useStageControls() {
         setViewMode: state.setViewMode,
         setBack: state.setBack,
         setBorder: state.setBorder,
+        setMask: state.setMask,
         setColor: state.setColor,
         setColors: state.setColors,
         saveNewColor: state.saveNewColor,
@@ -305,6 +307,7 @@ function useStageControls() {
     const borders = useStore(state => ([...state.borders]), shallow);
     const colors = useStore(state => ([...state.colors]), shallow);
     const variants = useStore(state => ([...state.variants]), shallow);
+    const masks = useStore(state => ([...state.masks]), shallow);
 
 
     // Series //
@@ -372,12 +375,17 @@ function useStageControls() {
             label: 'Border',
             options: borders.map(x => x.name)
         },
+        mask: {
+            label: 'Mask',
+            options: [undefined, ...masks.map(x => x.name)],
+        },
     }));
 
     React.useEffect(() => {
         // Push control updates to store
         setBack(backs.find(x => x.name === textureControl.back) as Texture);
         setBorder(borders.find(x => x.name === textureControl.border) as Texture);
+        setMask(masks.find(x => x.name === textureControl.mask) as Texture);
     }, [textureControl]);
 
 

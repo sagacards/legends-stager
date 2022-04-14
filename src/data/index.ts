@@ -9,6 +9,7 @@ export interface Variant {
     back: string;
     border: string;
     ink: string;
+    mask?: string;
 };
 
 const ColorRow = ['name', 'base', 'specular', 'emissive', 'background'];
