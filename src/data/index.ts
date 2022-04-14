@@ -1,18 +1,20 @@
+import * as THREE from 'three';
 const Colors = import.meta.glob('./*/colors.csv')
 const Variants = import.meta.glob('./*/variants.csv')
 const Art = import.meta.glob('/src/art/*/*-layer-*')
 
 
-const VariantRow = ['border', 'back', 'ink'];
+export const VariantRow = ['border', 'back', 'ink', 'mask', 'stock'];
 
 export interface Variant {
     back: string;
     border: string;
     ink: string;
     mask?: string;
+    stock: string;
 };
 
-const ColorRow = ['name', 'base', 'specular', 'emissive', 'background'];
+export const ColorRow = ['name', 'base', 'specular', 'emissive', 'background'];
 
 export interface Color {
     name: string;
@@ -50,7 +52,7 @@ const AllSeries = {
 
 export const seriesIdentifiers = Object.keys(AllSeries) as SeriesIdentifier[];
 
-export const defaultSeries = seriesIdentifiers[seriesIdentifiers.length - 1];
+export const defaultSeries = window.localStorage.getItem('series') as SeriesIdentifier || seriesIdentifiers[seriesIdentifiers.length - 1];
 
 export type SeriesIdentifier = keyof typeof AllSeries;
 
@@ -69,11 +71,22 @@ type CSV = string[][];
 
 
 // Converts csv rows into array of objects
-function loadCsv<U> (
+export function loadCsv<U> (
     cols    : string[],
     csv     : CSV,
 ) : U[] {
     return csv.map(row => cols.reduce((agg, col, i) => ({ ...agg, [col] : row[i] }), {} as U)).slice(1, csv.length);
+};
+
+// Converts array of objects into csv rows
+export function dumpCsv<U> (
+    cols    : string[],
+    data    : U[],
+) : string {
+    return [
+        cols.join(','),
+        ...data.map(row => cols.map(col => row[col]).join(','))
+    ].join('\n');
 };
 
 // Retrieve variants
@@ -128,6 +141,37 @@ export async function getData (
         variants,
     }
 };
+
+export const stocks : Color[] = [
+    {
+        name: 'black',
+        base: '#111111',
+        specular: '#111111',
+        emissive: '#111111',
+        background: '#000000'
+    },
+    {
+        name: 'white',
+        base: '#ffffff',
+        specular: '#ffffff',
+        emissive: '#ffffff',
+        background: '#000000'
+    },
+    {
+        name: 'red',
+        base: '#3B0303',
+        specular: '#3B0303',
+        emissive: '#3B0303',
+        background: '#000000'
+    },
+    {
+        name: 'blue',
+        base: '#2E2F59',
+        specular: '#2E2F59',
+        emissive: '#2E2F59',
+        background: '#000000'
+    },
+];
 
 
 // Download data for a legends series (for capturing localstorage changes).

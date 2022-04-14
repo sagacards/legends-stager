@@ -5,7 +5,7 @@ import create from 'zustand';
 import WebMWriter from 'webm-writer';
 //@ts-ignore
 import download from 'downloadjs';
-import { Variant, Color, getData, SeriesIdentifier, defaultSeries, Texture } from 'data/index'
+import { Variant, Color, getData, SeriesIdentifier, defaultSeries, Texture, stocks, dumpCsv, VariantRow, ColorRow } from 'data/index'
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
 const Masks = import.meta.glob('/src/art/common/mask-*.*');
@@ -37,10 +37,12 @@ interface Store {
     // Card Ink Colors
     colors      : Color[];
     setColors   : (c : Color[]) => void;
-
-    // Active Color
     color       : Color;
     setColor    : (c : Color) => void;
+
+    // Card Stock Color
+    stock       : Color;
+    setStock    : (s : Color) => void;
 
     // Updating Colors
     saveNewColor: () => void;
@@ -49,8 +51,6 @@ interface Store {
 
     // Card Backs
     backs       : Texture[];
-
-    // Active Back
     back        : Texture;
     setBack     : (b : Texture) => void;
 
@@ -110,6 +110,7 @@ const useStore = create<Store>((set, get) => {
         series: defaultSeries,
         setSeries (series) {
             set({ series });
+            window.localStorage.setItem('series', series);
         },
 
         cardArt: defaultSeriesData.cardArt,
@@ -123,27 +124,30 @@ const useStore = create<Store>((set, get) => {
         },
         addVariant () {
             const { variants : existing, series, back, border, color, mask, stock } = get();
+            const variants = [...existing, { back: back.name.replace('back-', ''), border: border.name.replace('border-', ''), ink: color.name, mask: mask?.name, stock: stock.name }];
             window.localStorage.setItem(`variants-${series}`, JSON.stringify(variants));
             set({ variants });
         },
 
         variant : defaultSeriesData.variants[0],
         setVariant (variant) {
-            const { colors, backs, borders } = get();
+            const { colors, backs, borders, masks } = get();
             const color = colors.find(x => x.name.toLowerCase() === variant.ink.toLowerCase()) as Color;
             const back = backs.find(x => x.name.toLowerCase() === `back-${variant.back.toLowerCase()}`) as Texture;
             const border = borders.find(x => x.name.toLowerCase() === `border-${variant.border.toLowerCase()}`) as Texture;
             const mask = masks.find(x => x.name.toLowerCase() === `${variant?.mask?.toLowerCase()}`) as Texture;
+            const stock = stocks.find(x => x.name.toLowerCase() === `${variant?.stock.toLowerCase()}`) as Color;
             set({ variant, color, back, border, mask, stock });
         },
 
         async downloadVariants () {
             const variants = get().variants;
-            const json = JSON.stringify(variants);
-            var a = document.createElement('a');
-            a.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(json));
-            a.setAttribute('download', 'variants.json');
-            await a.click();
+            const csv = dumpCsv(VariantRow, variants);
+            console.log(csv);
+            // var a = document.createElement('a');
+            // a.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
+            // a.setAttribute('download', 'variants.csv');
+            // await a.click();
         },
 
         colors: defaultSeriesData.colors,
@@ -155,6 +159,11 @@ const useStore = create<Store>((set, get) => {
         setColor (color) {
             // console.info(`Active color changed. Name: ${color.name}, Base: ${color.base}, Specular: ${color.specular}, Emissive: ${color.emissive}`);
             set({ color });
+        },
+
+        stock: stocks[0],
+        setStock (stock) {
+            set({ stock });
         },
 
         saveNewColor () {
@@ -209,11 +218,12 @@ const useStore = create<Store>((set, get) => {
 
         async downloadColors () {
             const colors = get().colors;
-            const json = JSON.stringify(colors);
-            var a = document.createElement('a');
-            a.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(json));
-            a.setAttribute('download', 'colors.json');
-            await a.click();
+            const csv = dumpCsv(ColorRow, colors);
+            console.log(csv);
+            // var a = document.createElement('a');
+            // a.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
+            // a.setAttribute('download', 'colors.csv');
+            // await a.click();
         },
 
         backs,
@@ -226,6 +236,12 @@ const useStore = create<Store>((set, get) => {
         border: borders[0],
         setBorder (border) {
             set({ border });
+        },
+
+        masks,
+        mask: undefined,
+        setMask (mask) {
+            set({ mask })
         },
 
         exporting : false,

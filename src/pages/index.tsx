@@ -10,7 +10,7 @@ import { cardDimensions, textureSize } from 'three/primitives/geometry';
 import { SideBySide, Sun } from 'three/primitives/lights';
 import { useCinematicCover, useGoldLeafNormal } from 'three/primitives/textures';
 import shallow from 'zustand/shallow'
-import { Color, defaultSeries, getData, seriesIdentifiers, Texture } from 'data/index'
+import { Color, defaultSeries, getData, seriesIdentifiers, Texture, stocks } from 'data/index'
 
 const { colors : defaultColors, } = await getData(defaultSeries);
 
@@ -88,7 +88,7 @@ function StagingScene() {
         {store.viewMode === 'side-by-side' && <group ref={secondaryCard} position={[1.5, 0, 1]} rotation={[0, Math.PI + Math.PI * .1, 0]}>
             <Card
                 materials={<>
-                    <meshStandardMaterial attachArray="material" color={"#111"} />
+                    <meshStandardMaterial attachArray="material" color={store.stock.base} />
                 </>}
                 children={<>
                     {back}
@@ -159,6 +159,7 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         return layers
     }, [store.cardArt]);
     
+    // TODO: Ink textures
     const back = store.back.name === 'back-cinematic' ? <CardInk
         side={THREE.BackSide}
         color={colorBase}
@@ -174,31 +175,24 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         alpha={useLoader(THREE.TextureLoader, store.back.path)}
     />;
 
-    const border = store.border.name === 'border-cinematic' ? <>
-        <CardInk
-            side={THREE.FrontSide}
-            color={'#121212'}
-            emissive={'#121212'}
-            specular={'#121212'}
-            alpha={useCinematicCover()}
-            shininess={100}
-            normal={false}
-        />
-        <CardInk
-            side={THREE.FrontSide}
-            color={colorBase}
-            emissive={colorEmissive}
-            specular={colorSpecular}
-            alpha={useLoader(THREE.TextureLoader, store.border.path)}
-            normal={false}
-        />
-    </> : <CardInk
+    const border = <CardInk
         side={THREE.FrontSide}
         color={colorBase}
         emissive={colorEmissive}
         specular={colorSpecular}
         alpha={useLoader(THREE.TextureLoader, store.border.path)}
-    />
+    />;
+
+    const mask = store?.mask?.path && <group position={[0, 0, -.001]}>
+        <CardInk
+            side={THREE.FrontSide}
+            color={store.stock.base}
+            emissive={store.stock.emissive}
+            specular={store.stock.specular}
+            alpha={useLoader(THREE.TextureLoader, store.mask.path)}
+            normal={false}
+        />
+    </group>;
 
     const scale = store.border.name === 'border-cinematic' ? .85 : 1;
 
@@ -206,7 +200,7 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         {createPortal(<ParallaxCardLayers scale={scale} textures={parallaxLayers} />, scene.current)}
         <Card
             materials={<>
-                <meshStandardMaterial attachArray="material" color={"#111"} />
+                <meshStandardMaterial attachArray="material" color={store.stock.base} />
                 <meshPhongMaterial
                     attachArray="material"
                     color={colorBase}
@@ -228,6 +222,7 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
             </>}
             children={<>
                 {border}
+                {mask}
                 {back}
             </>}
         />
@@ -263,6 +258,7 @@ function useStageControls() {
         setMask,
         setColor,
         setColors,
+        setStock,
         saveAllStatic,
         randomPlay,
         saveColor,
@@ -285,6 +281,7 @@ function useStageControls() {
         setMask: state.setMask,
         setColor: state.setColor,
         setColors: state.setColors,
+        setStock: state.setStock,
         saveNewColor: state.saveNewColor,
         downloadColors: state.downloadColors,
         saveColor: state.saveColor,
@@ -361,6 +358,22 @@ function useStageControls() {
         // Push control updates to store
         setViewMode(modeControl.mode as ViewMode);
     }, [modeControl.mode]);
+
+
+    // Card Stock //
+
+
+    const  [stockControl, setStockControl] = useControls('Card Stock', () => ({
+        stock : {
+            label: 'Stock',
+            options: stocks.map(x => x.name),
+        }
+    }));
+
+    React.useEffect(() => {
+        // Push control updates to store
+        setStock(stocks.find(x => x.name === stockControl.stock) as Color);
+    }, [stockControl]);
 
 
     // Card Texture //
@@ -462,7 +475,7 @@ function useStageControls() {
         };
         if (!shallowEqual(state.variant, prev.variant)) {
             setColorControls({ preset: state.color.name });
-            setTextureControl({ back : state.back.name, border : state.border.name })
+            setTextureControl({ back : state.back.name, border : state.border.name, mask : state.mask?.name, })
         };
     }), [colorOptions]);
 

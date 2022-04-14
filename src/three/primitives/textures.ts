@@ -4,10 +4,9 @@ import * as THREE from 'three';
 
 // import useLegendManifest, { host } from 'hooks/legend-manifest';
 
-import Normal from 'art/common/normal.webp';
-import FoolFlat from 'art/0-the-fool/fool-flat.webp';
-import MagicianFlat from 'art/1-the-magician/magician-flat.webp';
-import CinematicCover from 'art/1-the-magician/cinematic-cover.webp';
+import Normal from 'art/common/normal-golf-leaf.png';
+import NormalAcrylic from 'art/common/normal-streaky-acrylic-2.png';
+import CinematicCover from 'art/common/mask-cinematic.webp';
 import { Texture } from 'data/index';
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
@@ -16,6 +15,11 @@ const Magician = import.meta.glob('/src/art/1-the-magician/magician-layer-*.webp
 
 export function useGoldLeafNormal(): THREE.Texture {
     const texture = useLoader(THREE.TextureLoader, Normal);
+    return texture;
+};
+
+export function useAcrylicNormal(): THREE.Texture {
+    const texture = useLoader(THREE.TextureLoader, NormalAcrylic);
     return texture;
 };
 

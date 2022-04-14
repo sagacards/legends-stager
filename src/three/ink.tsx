@@ -1,6 +1,7 @@
 import { useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import {
+    useAcrylicNormal,
     useGoldLeafNormal,
     useCardBorders,
 } from 'three/primitives/textures';
@@ -28,7 +29,7 @@ export default function CardInk({
 } : Props) {
     const [border] = useCardBorders();
     const f = useLoader(THREE.TextureLoader, border.path)
-    const z = normal === false ? null : normal ? normal : useGoldLeafNormal()
+    const z = null;
     return (
         <>
             <mesh position={[0, 0, 0.007 * (side === THREE.BackSide ? -1 : 1)]}>
