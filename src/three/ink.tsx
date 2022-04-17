@@ -29,7 +29,7 @@ export default function CardInk({
 } : Props) {
     const [border] = useCardBorders();
     const f = useLoader(THREE.TextureLoader, border.path)
-    const z = null;
+    const z = normal === false ? null : useGoldLeafNormal();
     return (
         <>
             <mesh position={[0, 0, 0.007 * (side === THREE.BackSide ? -1 : 1)]}>

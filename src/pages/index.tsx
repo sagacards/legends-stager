@@ -8,9 +8,9 @@ import Card from 'three/card';
 import CardInk from 'three/ink';
 import { cardDimensions, textureSize } from 'three/primitives/geometry';
 import { SideBySide, Sun } from 'three/primitives/lights';
-import { useCinematicCover, useGoldLeafNormal } from 'three/primitives/textures';
+import { useGoldLeafNormal } from 'three/primitives/textures';
 import shallow from 'zustand/shallow'
-import { Color, defaultSeries, getData, seriesIdentifiers, Texture, stocks } from 'data/index'
+import { Color, defaultSeries, getData, seriesIdentifiers, Texture, stocks, dumpManifest } from 'data/index'
 
 const { colors : defaultColors, } = await getData(defaultSeries);
 
@@ -88,7 +88,7 @@ function StagingScene() {
         {store.viewMode === 'side-by-side' && <group ref={secondaryCard} position={[1.5, 0, 1]} rotation={[0, Math.PI + Math.PI * .1, 0]}>
             <Card
                 materials={<>
-                    <meshStandardMaterial attachArray="material" color={store.stock.base} />
+                    <meshPhongMaterial attachArray="material" color={store.stock.base} emissive={store.stock.emissive} specular={store.stock.specular} />
                 </>}
                 children={<>
                     {back}
@@ -126,9 +126,9 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         new THREE.OrthographicCamera(-cardDimensions[0] / 2, cardDimensions[0] / 2, cardDimensions[1] / 2, -cardDimensions[1] / 2)
     );
     React.useEffect(() => {
-        scene.current.background = new THREE.Color('#f4a126').convertSRGBToLinear()
+        scene.current.background = new THREE.Color(store.sceneBackground).convertSRGBToLinear()
         camera.current.position.z = 20;
-    }, []);
+    }, [store.sceneBackground]);
     useFrame((state) => {
         if (!props.parent) return;
         const rx = props.parent.rotation.x;
@@ -268,6 +268,7 @@ function useStageControls() {
         setVariant,
         setVariants,
         addVariant,
+        saveVariant,
         downloadVariants,
         saveStatic,
         saveAnimated,
@@ -291,6 +292,7 @@ function useStageControls() {
         setVariant: state.setVariant,
         setVariants: state.setVariants,
         addVariant: state.addVariant,
+        saveVariant: state.saveVariant,
         downloadVariants: state.downloadVariants,
         saveStatic: state.saveStatic,
         saveAnimated: state.saveAnimated,
@@ -492,6 +494,7 @@ function useStageControls() {
             step: 1,
         },
         'add variant': button(addVariant),
+        'save variant': button(saveVariant),
         'download variants': button(downloadVariants),
     }), [variants]);
 
@@ -515,7 +518,20 @@ function useStageControls() {
         'export animated': button(saveAnimated),
         'random play': button(randomPlay),
         'export sampler': button(exportSampler),
+        'export manifest': button(() => console.log(dumpManifest(variants))),
     }));
+
+    // Keyboard Controls //
+
+    React.useEffect(() => {
+        document.onkeyup = (e) => {
+            if (e.key === 'ArrowRight') {
+                setVariantControls({ variant: variantControls.variant + 1 });
+            } else if (e.key === 'ArrowLeft') {
+                setVariantControls({ variant: variantControls.variant - 1 });
+            };
+        };
+    }, [variantControls]);
 
     return [modeControl]
 };

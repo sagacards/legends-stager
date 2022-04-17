@@ -5,7 +5,7 @@ import create from 'zustand';
 import WebMWriter from 'webm-writer';
 //@ts-ignore
 import download from 'downloadjs';
-import { Variant, Color, getData, SeriesIdentifier, defaultSeries, Texture, stocks, dumpCsv, VariantRow, ColorRow } from 'data/index'
+import { Variant, Color, getData, SeriesIdentifier, defaultSeries, Texture, stocks, dumpCsv, VariantRow, ColorRow, generateFileName } from 'data/index'
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
 const Masks = import.meta.glob('/src/art/common/mask-*.*');
@@ -29,6 +29,10 @@ interface Store {
     // Series
     series      : SeriesIdentifier;
     setSeries   : (s : SeriesIdentifier) => void;
+
+    // Background color
+    sceneBackground: string;
+    setSceneBackground: (s : string) => void;
 
     // Card art
     cardArt     : Texture[];
@@ -85,6 +89,7 @@ interface Store {
     variants        : Variant[];
     setVariants     : (v : Variant[]) => void;
     addVariant      : () => void;
+    saveVariant     : () => void;
     downloadVariants: () => void;
 
 };
@@ -113,6 +118,11 @@ const useStore = create<Store>((set, get) => {
             window.localStorage.setItem('series', series);
         },
 
+        sceneBackground: defaultSeriesData.background,
+        setSceneBackground (sceneBackground) {
+            set({ sceneBackground });
+        },
+
         cardArt: defaultSeriesData.cardArt,
         setCardArt (cardArt) {
             set({ cardArt });
@@ -127,6 +137,14 @@ const useStore = create<Store>((set, get) => {
             const variants = [...existing, { back: back.name.replace('back-', ''), border: border.name.replace('border-', ''), ink: color.name, mask: mask?.name, stock: stock.name }];
             window.localStorage.setItem(`variants-${series}`, JSON.stringify(variants));
             set({ variants });
+        },
+        saveVariant () {
+            const { variants : existing, variant, series, back, border, color, mask, stock } = get();
+            const variants = [...existing];
+            const i = existing.indexOf(variant);
+            variants[i] = { back: back.name.replace('back-', ''), border: border.name.replace('border-', ''), ink: color.name, mask: mask?.name, stock: stock.name };
+            set({ variants });
+            window.localStorage.setItem(`variants-${series}`, JSON.stringify(variants));
         },
 
         variant : defaultSeriesData.variants[0],
@@ -143,6 +161,7 @@ const useStore = create<Store>((set, get) => {
         async downloadVariants () {
             const variants = get().variants;
             const csv = dumpCsv(VariantRow, variants);
+            navigator.clipboard.writeText(csv);
             console.log(csv);
             // var a = document.createElement('a');
             // a.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
@@ -214,11 +233,13 @@ const useStore = create<Store>((set, get) => {
             existing.background = color.background;
 
             setColors(colors);
+            window.localStorage.setItem(`colors-${get().series}`, JSON.stringify(colors));
         },
 
         async downloadColors () {
             const colors = get().colors;
             const csv = dumpCsv(ColorRow, colors);
+            navigator.clipboard.writeText(csv);
             console.log(csv);
             // var a = document.createElement('a');
             // a.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
@@ -264,7 +285,7 @@ const useStore = create<Store>((set, get) => {
                     if (!blob) return;
                     var a = document.createElement('a');
                     var url = await URL.createObjectURL(blob);
-                    const name = `preview-side-by-side-${get().back.name.toLowerCase().replaceAll('back-', '')}-${get().border.name.toLowerCase().replaceAll('border-', '')}-${get().color.name.toLowerCase().replaceAll(' ', '-')}.png`;
+                    const name = `preview-side-by-side-${generateFileName(get().variant)}.png`;
                     a.href = url;
                     a.download = name;
                     await a.click();
@@ -293,7 +314,7 @@ const useStore = create<Store>((set, get) => {
 
             for (const variant of variants) {
                 setVariant(variant);
-                const name = `preview-side-by-side-${get().back.name.toLowerCase().replaceAll('back-', '')}-${get().border.name.toLowerCase().replaceAll('border-', '')}-${get().color.name.toLowerCase().replaceAll(' ', '-')}.png`;
+                const name = `preview-side-by-side-${generateFileName(get().variant)}.png`;
                 console.info(`render ${name}`);
                 await get().saveStatic();
             };
@@ -363,7 +384,7 @@ const useStore = create<Store>((set, get) => {
                 if (i < frames * 2) {
                     requestAnimationFrame(render);
                 } else {
-                    const name = `preview-animated-${get().back.name.toLowerCase().replaceAll('back-', '')}-${get().border.name.toLowerCase().replaceAll('border-', '')}-${get().color.name.toLowerCase().replaceAll(' ', '_')}.webm`;
+                    const name = `preview-animated-${generateFileName(get().variant)}.webm`;
                     capturer.complete()
                     .then(function(blob : any) {
                         download(blob, name, 'video/webm');
@@ -415,7 +436,7 @@ const useStore = create<Store>((set, get) => {
                 if (i < frames) {
                     requestAnimationFrame(render);
                 } else {
-                    const name = `preview-animated-${get().back.name.toLowerCase().replaceAll('back-', '')}-${get().border.name.toLowerCase().replaceAll('border-', '')}-${get().color.name.toLowerCase().replaceAll(' ', '-')}.webm`;
+                    const name = `preview-animated-${generateFileName(get().variant)}.webm`;
                     capturer.complete()
                     .then(function(blob : any) {
                         download(blob, name, 'video/webm');
