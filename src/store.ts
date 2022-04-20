@@ -5,7 +5,7 @@ import create from 'zustand';
 import WebMWriter from 'webm-writer';
 //@ts-ignore
 import download from 'downloadjs';
-import { Variant, Color, getData, SeriesIdentifier, defaultSeries, Texture, stocks, dumpCsv, VariantRow, ColorRow, generateFileName } from 'data/index'
+import { Variant, Color, getData, SeriesIdentifier, defaultSeries, Texture, stocks, dumpCsv, VariantRow, ColorRow, generateFileName, Stock, StockRow } from 'data/index'
 const Backs = import.meta.glob('/src/art/common/back-*.webp');
 const Borders = import.meta.glob('/src/art/common/border-*.webp');
 const Masks = import.meta.glob('/src/art/common/mask-*.*');
@@ -44,14 +44,20 @@ interface Store {
     color       : Color;
     setColor    : (c : Color) => void;
 
-    // Card Stock Color
-    stock       : Color;
-    setStock    : (s : Color) => void;
-
     // Updating Colors
     saveNewColor: () => void;
     saveColor: () => void;
     downloadColors: () => void;
+
+    // Card Stock Color
+    stocks      : Stock[];
+    setStocks   : (s : Stock[]) => void;
+    stock       : Stock;
+    setStock    : (s : Stock) => void;
+
+    // Updating Stocks
+    saveStock   : () => void;
+    downloadStocks: () => void;
 
     // Card Backs
     backs       : Texture[];
@@ -154,7 +160,7 @@ const useStore = create<Store>((set, get) => {
             const back = backs.find(x => x.name.toLowerCase() === `back-${variant.back.toLowerCase()}`) as Texture;
             const border = borders.find(x => x.name.toLowerCase() === `border-${variant.border.toLowerCase()}`) as Texture;
             const mask = masks.find(x => x.name.toLowerCase() === `${variant?.mask?.toLowerCase()}`) as Texture;
-            const stock = stocks.find(x => x.name.toLowerCase() === `${variant?.stock.toLowerCase()}`) as Color;
+            const stock = stocks.find(x => x.name.toLowerCase() === `${variant?.stock.toLowerCase()}`) as Stock;
             set({ variant, color, back, border, mask, stock });
         },
 
@@ -178,11 +184,6 @@ const useStore = create<Store>((set, get) => {
         setColor (color) {
             // console.info(`Active color changed. Name: ${color.name}, Base: ${color.base}, Specular: ${color.specular}, Emissive: ${color.emissive}`);
             set({ color });
-        },
-
-        stock: stocks[0],
-        setStock (stock) {
-            set({ stock });
         },
 
         saveNewColor () {
@@ -239,6 +240,55 @@ const useStore = create<Store>((set, get) => {
         async downloadColors () {
             const colors = get().colors;
             const csv = dumpCsv(ColorRow, colors);
+            navigator.clipboard.writeText(csv);
+            console.log(csv);
+            // var a = document.createElement('a');
+            // a.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
+            // a.setAttribute('download', 'colors.csv');
+            // await a.click();
+        },
+
+        stocks,
+        setStocks (stocks) {
+            set({ stocks });
+        },
+
+        stock: stocks[0],
+        setStock (stock) {
+            set({ stock });
+        },
+
+        saveStock () {
+            const setStocks = get().setStocks;
+
+            const stocks = [...get().stocks];
+            const stock = get().stock;
+
+            if (!stock) {
+                console.error(`Could not update stock, no stock is defined.`);
+                return
+            };
+
+            const existing = stocks.find(x => x.name === stock.name);
+
+            if (!existing) {
+                console.error(`Could not save existing colour. It doesn't exist!`)
+                return;
+            }
+
+            existing.name = stock.name;
+            existing.base = stock.base;
+            existing.specular = stock.specular;
+            existing.emissive = stock.emissive;
+            existing.material = stock.material;
+
+            setStocks(stocks);
+            window.localStorage.setItem(`stocks-${get().series}`, JSON.stringify(stocks));
+        },
+
+        async downloadStocks () {
+            const stocks = get().stocks;
+            const csv = dumpCsv(StockRow, stocks);
             navigator.clipboard.writeText(csv);
             console.log(csv);
             // var a = document.createElement('a');

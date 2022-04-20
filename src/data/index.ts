@@ -4,6 +4,7 @@ const Config = import.meta.glob('./*/config.json')
 const Colors = import.meta.glob('./*/colors.csv')
 const Variants = import.meta.glob('./*/variants.csv')
 const Art = import.meta.glob('/src/art/*/*-layer-*')
+import Stocks from './stocks.csv';
 
 
 export const VariantRow = ['border', 'back', 'ink', 'mask', 'stock'];
@@ -24,6 +25,16 @@ export interface Color {
     specular: string;
     emissive: string;
     background: string;
+};
+
+export const StockRow = ['name', 'base', 'specular', 'emissive', 'material'];;
+
+export interface Stock {
+    name: string;
+    base: string;
+    specular: string;
+    emissive: string;
+    material: string;
 };
 
 export interface Config {
@@ -104,8 +115,8 @@ export function dumpManifest(
     variants : Variant[],
 ) {
     return [
-        ...variants.map(v => `preview-animated-${generateFileName(v)}.webm,Animated Preview,preview animated ${slug(v.back)} ${slug(v.border)} ${slug(v.ink)} ${slug(v.stock)} ${v.mask ? slug(v.mask) : 'none'},An animated preview,video/webm`),
-        ...variants.map(v => `preview-side-by-side-${generateFileName(v)}.webm,Side By Side Preview,preview side-by-side ${slug(v.back)} ${slug(v.border)} ${slug(v.ink)} ${slug(v.stock)} ${v.mask ? slug(v.mask) : 'none'},A side-by-side preview,image/webp`),
+        ...variants.map(v => `preview-animated-${generateFileName(v)}.webm,Animated Preview,preview animated back-${slug(v.back)} border-${slug(v.border)} ink-${slug(v.ink)} stock-${slug(v.stock)} mask-${v.mask ? slug(v.mask) : 'none'},An animated preview,video/webm`),
+        ...variants.map(v => `preview-side-by-side-${generateFileName(v)}.webm,Side By Side Preview,preview side-by-side back-${slug(v.back)} border-${slug(v.border)} ink-${slug(v.ink)} stock-${slug(v.stock)}mask- ${v.mask ? slug(v.mask) : 'none'},A side-by-side preview,image/webp`),
     ].join('\n');
 };
 
@@ -121,6 +132,11 @@ async function loadColors(
     series: SeriesIdentifier,
 ) {
     return (await (Object.entries(Colors).find(([path], i) => path.includes(series)) as unknown as [string, () => Promise<{ default: CSV }>])[1]()).default;
+};
+
+// Retrieve stocks
+async function loadStocks() {
+    return Stocks;
 };
 
 // Retrieve config
@@ -174,37 +190,12 @@ export async function getData(
     }
 };
 
-export const stocks: Color[] = [
-    {
-        name: 'black',
-        base: '#111111',
-        specular: '#111111',
-        emissive: '#111111',
-        background: '#000000'
-    },
-    {
-        name: 'white',
-        base: '#c4c4c4',
-        specular: '#ffffff',
-        emissive: '#ffffff',
-        background: '#000000'
-    },
-    {
-        name: 'red',
-        base: '#3B0303',
-        specular: '#3B0303',
-        emissive: '#3B0303',
-        background: '#000000'
-    },
-    {
-        name: 'priestess',
-        base: '#2E2F59',
-        specular: '#2E2F59',
-        emissive: '#2E2F59',
-        background: '#000000'
-    },
-];
-
+export const stocks = function () {
+    let stocks = loadCsv<Stock>(StockRow, Stocks);
+    const localConfig = window.localStorage.getItem(`config-stocks`);
+    if (localConfig) stocks = JSON.parse(localConfig);
+    return stocks;
+}();
 
 // Download data for a legends series (for capturing localstorage changes).
 export function saveData(series: SeriesIdentifier): void { };

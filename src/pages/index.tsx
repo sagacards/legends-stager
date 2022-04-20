@@ -10,7 +10,7 @@ import { cardDimensions, textureSize } from 'three/primitives/geometry';
 import { SideBySide, Sun } from 'three/primitives/lights';
 import { useGoldLeafNormal } from 'three/primitives/textures';
 import shallow from 'zustand/shallow'
-import { Color, defaultSeries, getData, seriesIdentifiers, Texture, stocks, dumpManifest } from 'data/index'
+import { Color, defaultSeries, getData, seriesIdentifiers, Texture, stocks, dumpManifest, Stock } from 'data/index'
 
 const { colors : defaultColors, } = await getData(defaultSeries);
 
@@ -18,6 +18,10 @@ let colorBase = new THREE.Color(defaultColors[0].base).convertSRGBToLinear();
 let colorSpecular = new THREE.Color(defaultColors[0].specular).convertSRGBToLinear();
 let colorEmissive = new THREE.Color(defaultColors[0].emissive).convertSRGBToLinear();
 let colorBackground = new THREE.Color(defaultColors[0].background).convertSRGBToLinear();
+
+let stockBase = new THREE.Color(stocks[0].base).convertSRGBToLinear();
+let stockSpecular = new THREE.Color(stocks[0].specular).convertSRGBToLinear();
+let stockEmissive = new THREE.Color(stocks[0].emissive).convertSRGBToLinear();
 
 const lights = [SideBySide, Sun];
 
@@ -84,11 +88,16 @@ function StagingScene() {
         alpha={useLoader(THREE.TextureLoader, store.back.path)}
     />
 
+    const stockMaterial = React.useMemo(() => store.stock.material === 'phong'
+        ? <meshPhongMaterial attachArray="material" color={stockBase} emissive={stockEmissive} specular={stockSpecular} />
+        : <meshStandardMaterial attachArray="material" color={stockBase} emissive={stockEmissive} />
+    , [store.stock]);
+
     return <>
         {store.viewMode === 'side-by-side' && <group ref={secondaryCard} position={[1.5, 0, 1]} rotation={[0, Math.PI + Math.PI * .1, 0]}>
             <Card
                 materials={<>
-                    <meshPhongMaterial attachArray="material" color={store.stock.base} emissive={store.stock.emissive} specular={store.stock.specular} />
+                    {stockMaterial}
                 </>}
                 children={<>
                     {back}
@@ -158,6 +167,11 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         const layers = store.cardArt.map(x => useLoader(THREE.TextureLoader, x.path));
         return layers
     }, [store.cardArt]);
+
+    const stockMaterial = React.useMemo(() => store.stock.material === 'phong'
+        ? <meshPhongMaterial attachArray="material" color={stockBase} emissive={stockEmissive} specular={stockSpecular} />
+        : <meshStandardMaterial attachArray="material" color={stockBase} emissive={stockEmissive} />
+    , [store.stock]);
     
     // TODO: Ink textures
     const back = store.back.name === 'back-cinematic' ? <CardInk
@@ -186,11 +200,12 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
     const mask = store?.mask?.path && <group position={[0, 0, -.001]}>
         <CardInk
             side={THREE.FrontSide}
-            color={store.stock.base}
-            emissive={store.stock.emissive}
-            specular={store.stock.specular}
+            color={stockBase}
+            emissive={stockEmissive}
+            specular={stockSpecular}
             alpha={useLoader(THREE.TextureLoader, store.mask.path)}
             normal={false}
+            material={store.stock.material as 'phong' | 'standard'}
         />
     </group>;
 
@@ -200,7 +215,7 @@ function ParallaxCardFace(props: { parent?: THREE.Mesh }) {
         {createPortal(<ParallaxCardLayers scale={scale} textures={parallaxLayers} />, scene.current)}
         <Card
             materials={<>
-                <meshStandardMaterial attachArray="material" color={store.stock.base} />
+                {stockMaterial}
                 <meshPhongMaterial
                     attachArray="material"
                     color={colorBase}
@@ -259,6 +274,9 @@ function useStageControls() {
         setColor,
         setColors,
         setStock,
+        setStocks,
+        saveStock,
+        downloadStocks,
         saveAllStatic,
         randomPlay,
         saveColor,
@@ -283,6 +301,9 @@ function useStageControls() {
         setColor: state.setColor,
         setColors: state.setColors,
         setStock: state.setStock,
+        setStocks: state.setStocks,
+        saveStock: state.saveStock,
+        downloadStocks: state.downloadStocks,
         saveNewColor: state.saveNewColor,
         downloadColors: state.downloadColors,
         saveColor: state.saveColor,
@@ -307,6 +328,8 @@ function useStageControls() {
     const colors = useStore(state => ([...state.colors]), shallow);
     const variants = useStore(state => ([...state.variants]), shallow);
     const masks = useStore(state => ([...state.masks]), shallow);
+    const stock = useStore(state => ({ ...state.stock }), shallow);
+    const stocks = useStore(state => ([...state.stocks]), shallow);
 
 
     // Series //
@@ -362,22 +385,6 @@ function useStageControls() {
     }, [modeControl.mode]);
 
 
-    // Card Stock //
-
-
-    const  [stockControl, setStockControl] = useControls('Card Stock', () => ({
-        stock : {
-            label: 'Stock',
-            options: stocks.map(x => x.name),
-        }
-    }));
-
-    React.useEffect(() => {
-        // Push control updates to store
-        setStock(stocks.find(x => x.name === stockControl.stock) as Color);
-    }, [stockControl]);
-
-
     // Card Texture //
 
 
@@ -402,6 +409,81 @@ function useStageControls() {
         setBorder(borders.find(x => x.name === textureControl.border) as Texture);
         setMask(masks.find(x => x.name === textureControl.mask) as Texture);
     }, [textureControl]);
+
+
+    // Card Stock //
+
+
+    const  [stockControl, setStockControl] = useControls('Card Stock', () => ({
+        stock : {
+            label: 'Stock',
+            options: stocks.map(x => x.name),
+        },
+        base: {
+            label: 'Base',
+            hint: 'The base colour of the ink',
+            value: stock.base,
+        },
+        specular: {
+            label: 'Specular',
+            hint: 'The colour of light reflecting on the ink',
+            value: stock.specular,
+        },
+        emissive: {
+            label: 'Emissive',
+            hint: 'The colour emitted by the ink when no light is upon it',
+            value: stock.emissive,
+        },
+        material: {
+            label: 'Material',
+            hint: 'The colour of the backdrop spotlight',
+            value: stock.material,
+            options: ['phong', 'standard'],
+        },
+        'overwrite stock': button(saveStock),
+        'download stocks': button(downloadStocks),
+    }), [stocks]);
+
+    React.useEffect(() => {
+        // Push colour preset changes to store
+        const stock = stocks.find(x => x.name === stockControl.stock) as Stock;
+        if (stock === undefined) return;
+        setStock(stock);
+
+        // Update colour controls
+        setStockControl({
+            stock: stock.name,
+            base: stock.base,
+            emissive: stock.emissive,
+            specular: stock.specular,
+            material: stock.material,
+        });
+    }, [stocks, stockControl.stock]);
+
+    React.useEffect(() => {
+        setStock({
+            name: stockControl.stock,
+            base: stockControl.base,
+            emissive: stockControl.emissive,
+            specular: stockControl.specular,
+            material: stockControl.material,
+        });
+    }, [stockControl]);
+
+    // Update scene colours
+    React.useEffect(() => useStore.subscribe((state, prev) => {
+        if (!shallowEqual(state.stocks, prev.stocks)) {
+            setStockControl({ stock: state.stock.name });
+        };
+        if (!shallowEqual(state.stock, prev.stock)) {
+            stockBase = new THREE.Color(state.stock.base).convertSRGBToLinear();
+            stockEmissive = new THREE.Color(state.stock.emissive).convertSRGBToLinear();
+            stockSpecular = new THREE.Color(state.stock.specular).convertSRGBToLinear();
+        };
+        if (!shallowEqual(state.variant, prev.variant)) {
+            setStockControl({ stock: state.stock.name });
+        };
+    }), []);
 
 
     // Ink Colors //
@@ -461,7 +543,7 @@ function useStageControls() {
             emissive: colorControls.emissive,
             background: colorControls.background,
         });
-    }, [colorControls])
+    }, [colorControls]);
 
     // Update scene colours
     React.useEffect(() => useStore.subscribe((state, prev) => {

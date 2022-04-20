@@ -16,6 +16,7 @@ interface Props {
     side?: THREE.Side;
     normal?: THREE.Texture | false;
     shininess?: number;
+    material?: 'phong' | 'standard';
 };
 
 export default function CardInk({
@@ -26,6 +27,7 @@ export default function CardInk({
     side,
     normal,
     shininess,
+    material = 'phong',
 } : Props) {
     const [border] = useCardBorders();
     const f = useLoader(THREE.TextureLoader, border.path)
@@ -34,7 +36,7 @@ export default function CardInk({
         <>
             <mesh position={[0, 0, 0.007 * (side === THREE.BackSide ? -1 : 1)]}>
                 <planeGeometry args={[2.75, 4.75]} />
-                <meshPhongMaterial
+                {material === 'phong' ? <meshPhongMaterial
                     alphaMap={alpha || f}
                     transparent={true}
                     color={color}
@@ -46,7 +48,19 @@ export default function CardInk({
                     // @ts-ignore
                     normalScale={[0.05, 0.05]}
                     side={side || THREE.FrontSide}
-                />
+                /> : <meshStandardMaterial
+                    alphaMap={alpha || f}
+                    transparent={true}
+                    color={color}
+                    emissive={emissive}
+                    emissiveIntensity={0.125}
+                    specular={specular}
+                    shininess={shininess || 200}
+                    normalMap={z}
+                    // @ts-ignore
+                    normalScale={[0.05, 0.05]}
+                    side={side || THREE.FrontSide}
+                />}
             </mesh>
         </>
     );
