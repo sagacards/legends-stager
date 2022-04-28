@@ -116,7 +116,7 @@ export function dumpManifest(
 ) {
     return [
         ...variants.map(v => `preview-animated-${generateFileName(v)}.webm,Animated Preview,preview animated back-${slug(v.back)} border-${slug(v.border)} ink-${slug(v.ink)} stock-${slug(v.stock)} mask-${v.mask ? slug(v.mask) : 'none'},An animated preview,video/webm`),
-        ...variants.map(v => `preview-side-by-side-${generateFileName(v)}.webm,Side By Side Preview,preview side-by-side back-${slug(v.back)} border-${slug(v.border)} ink-${slug(v.ink)} stock-${slug(v.stock)}mask- ${v.mask ? slug(v.mask) : 'none'},A side-by-side preview,image/webp`),
+        ...variants.map(v => `preview-side-by-side-${generateFileName(v)}.webp,Side By Side Preview,preview side-by-side back-${slug(v.back)} border-${slug(v.border)} ink-${slug(v.ink)} stock-${slug(v.stock)} mask-${v.mask ? slug(v.mask) : 'none'},A side-by-side preview,image/webp`),
     ].join('\n');
 };
 
@@ -143,7 +143,7 @@ async function loadStocks() {
 async function loadConfig(
     series: SeriesIdentifier,
 ): Promise<Config> {
-    return await Config[series] as unknown as Config;
+    return (await (Object.entries(Config).find(([k]) => k.includes(series)) as unknown as [string, () => Promise<{ default: Config }>])[1]()).default;
 }
 
 // Retrieve card art layers
@@ -201,11 +201,11 @@ export const stocks = function () {
 export function saveData(series: SeriesIdentifier): void { };
 
 function randomBack () {
-    return backs[Math.floor(Math.random() * backs.length)].name;
+    return slug(backs[Math.floor(Math.random() * backs.length)].name);
 };
 
 function randomBorder () {
-    return borders[Math.floor(Math.random() * borders.length)].name;
+    return slug(borders[Math.floor(Math.random() * borders.length)].name);
 };
 
 export function generate(
