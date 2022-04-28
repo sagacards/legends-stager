@@ -192,7 +192,7 @@ export async function getData(
 
 export const stocks = function () {
     let stocks = loadCsv<Stock>(StockRow, Stocks);
-    const localConfig = window.localStorage.getItem(`config-stocks`);
+    const localConfig = window.localStorage.getItem(`stocks`);
     if (localConfig) stocks = JSON.parse(localConfig);
     return stocks;
 }();
@@ -210,11 +210,13 @@ function randomBorder () {
 
 export function generate(
     supply: number,
+    series: string,
 ): Variant[] {
     const stocks = {
         60: 'black',
-        30: 'white',
-        5: 'priestess',
+        25: 'white',
+        10: `${series}`,
+        5: `${series}-gloss`,
     };
     const inks = {
         // T1
@@ -243,7 +245,7 @@ export function generate(
                 "santo-bright",
                 "ward",
                 "fools-gold",
-                "priestess",
+                `${series}`,
             ],
         },
         // T3
@@ -260,7 +262,7 @@ export function generate(
                 "opal",
                 "garnet",
                 "crystal",
-                "priestess-bright",
+                `${series}-bright`,
             ],
         },
         // T4
@@ -280,7 +282,7 @@ export function generate(
                 "sultana",
                 "bubble-gum",
                 "macbeth",
-                "priestess-brilliant",
+                `${series}-brilliant`,
                 "cinematic",
             ]
         }
@@ -307,13 +309,13 @@ export function generate(
     let variants: Variant[] = [];
 
     // Start with a few series colours
-    variants.push({ stock: 'priestess', ink: 'priestess-brilliant', back: randomBack(), border: randomBorder() });
-    variants.push({ stock: 'priestess', ink: 'priestess-bright', back: randomBack(), border: randomBorder() });
-    variants.push({ stock: 'priestess', ink: 'priestess-bright', back: randomBack(), border: randomBorder() });
-    variants.push({ stock: 'priestess', ink: 'priestess', back: randomBack(), border: randomBorder() });
-    variants.push({ stock: 'priestess', ink: 'priestess', back: randomBack(), border: randomBorder() });
-    variants.push({ stock: 'priestess', ink: 'priestess', back: randomBack(), border: randomBorder() });
-    variants.push({ stock: 'priestess', ink: 'priestess', back: randomBack(), border: randomBorder() });
+    variants.push({ stock: `${series}-gloss`, ink: `${series}-brilliant`, back: randomBack(), border: randomBorder(), mask: 'none' });
+    variants.push({ stock: `${series}-gloss`, ink: `${series}-bright`, back: randomBack(), border: randomBorder(), mask: 'none' });
+    variants.push({ stock: `${series}`, ink: `${series}-bright`, back: randomBack(), border: randomBorder(), mask: 'none' });
+    variants.push({ stock: `${series}`, ink: `${series}`, back: randomBack(), border: randomBorder(), mask: 'none' });
+    variants.push({ stock: `${series}`, ink: `${series}`, back: randomBack(), border: randomBorder(), mask: 'none' });
+    variants.push({ stock: `${series}`, ink: `${series}`, back: randomBack(), border: randomBorder(), mask: 'none' });
+    variants.push({ stock: `${series}`, ink: `${series}`, back: randomBack(), border: randomBorder(), mask: 'none' });
 
     // Randomly generate the rest
     for (let i = supply - variants.length; i > 0; i--) {
@@ -323,11 +325,14 @@ export function generate(
             stock: randomStock(),
             back: randomBack(),
             border: randomBorder(),
+            mask: 'none',
         });
     };
     
     return variants
 };
+
+console.log(dumpCsv(VariantRow, generate(110, 'empress')));
 
 export function generateFileName (
     variant : Variant,

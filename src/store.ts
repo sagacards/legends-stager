@@ -283,7 +283,7 @@ const useStore = create<Store>((set, get) => {
             existing.material = stock.material;
 
             setStocks(stocks);
-            window.localStorage.setItem(`stocks-${get().series}`, JSON.stringify(stocks));
+            window.localStorage.setItem(`stocks`, JSON.stringify(stocks));
         },
 
         async downloadStocks () {
@@ -320,7 +320,7 @@ const useStore = create<Store>((set, get) => {
         setCapture (capture) { set({ capture })},
 
         async saveStatic() {
-            await delay(500);
+            await delay(3000);
             const viewmode = get().viewMode;
             get().setViewMode('side-by-side');
             const capture = get().capture;

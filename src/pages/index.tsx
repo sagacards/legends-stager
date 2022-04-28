@@ -61,7 +61,7 @@ function StagingScene() {
             mainCard.current.rotation.set(0, (-state.clock.getElapsedTime() * .62) % (Math.PI * 2) + Math.PI, 0);
         } else if (store.viewMode === 'pivot') {
             mainCard.current.position.set(0, 0, .5);
-            mainCard.current.rotation.set(0, Math.sin(-state.clock.getElapsedTime()) * Math.PI * .10, 0);
+            mainCard.current.rotation.set(0, Math.sin(-state.clock.getElapsedTime()) * Math.PI * .40, 0);
         } else {
             mainCard.current.position.set(0, 0, 0);
             mainCard.current.rotation.set(0, 0, 0);
@@ -274,7 +274,6 @@ function useStageControls() {
         setColor,
         setColors,
         setStock,
-        setStocks,
         saveStock,
         downloadStocks,
         saveAllStatic,
@@ -301,7 +300,6 @@ function useStageControls() {
         setColor: state.setColor,
         setColors: state.setColors,
         setStock: state.setStock,
-        setStocks: state.setStocks,
         saveStock: state.saveStock,
         downloadStocks: state.downloadStocks,
         saveNewColor: state.saveNewColor,
