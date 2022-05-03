@@ -11,6 +11,8 @@ import { SideBySide, Sun } from 'three/primitives/lights';
 import { useGoldLeafNormal } from 'three/primitives/textures';
 import shallow from 'zustand/shallow'
 import { Color, defaultSeries, getData, seriesIdentifiers, Texture, stocks, dumpManifest, Stock } from 'data/index'
+import { animated, useSpring, useSpringRef } from '@react-spring/three';
+import { cardSpringConf } from 'three/primitives/springs';
 
 const { colors : defaultColors, } = await getData(defaultSeries);
 
@@ -44,7 +46,16 @@ function StagingScene() {
     // Refs
     const mainCard = React.useRef<THREE.Mesh>()
     const secondaryCard = React.useRef<THREE.Mesh>()
-
+    const springRef = useSpringRef();
+    const spring = useSpring({
+        ref: springRef,
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        config: cardSpringConf,
+    });
+    const flip = React.useRef<boolean>(false);
+    const _phase = React.useRef<number>(0);
+    
     // Main animation loop
     useFrame(state => {
 
@@ -61,7 +72,7 @@ function StagingScene() {
             mainCard.current.rotation.set(0, (-state.clock.getElapsedTime() * .62) % (Math.PI * 2) + Math.PI, 0);
         } else if (store.viewMode === 'pivot') {
             mainCard.current.position.set(0, 0, .5);
-            mainCard.current.rotation.set(0, Math.sin(-state.clock.getElapsedTime()) * Math.PI * .40, 0);
+            mainCard.current.rotation.set(0, Math.sin(-state.clock.getElapsedTime()) * Math.PI * .10, 0);
         } else {
             mainCard.current.position.set(0, 0, 0);
             mainCard.current.rotation.set(0, 0, 0);
@@ -289,7 +300,8 @@ function useStageControls() {
         downloadVariants,
         saveStatic,
         saveAnimated,
-        exportSampler
+        exportSampler,
+        exportPivot,
     } = useStore(state => ({
         setSeries: state.setSeries,
         setCardArt: state.setCardArt,
@@ -316,6 +328,7 @@ function useStageControls() {
         saveStatic: state.saveStatic,
         saveAnimated: state.saveAnimated,
         exportSampler: state.exportSampler,
+        exportPivot: state.exportPivot,
     }), shallow);
 
     const color = useStore(state => ({ ...state.color }), shallow);
@@ -599,6 +612,7 @@ function useStageControls() {
         'random play': button(randomPlay),
         'export sampler': button(exportSampler),
         'export manifest': button(() => console.log(dumpManifest(variants))),
+        'export pivot': button(exportPivot),
     }));
 
     // Keyboard Controls //

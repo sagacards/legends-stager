@@ -14,6 +14,9 @@ const defaultSeriesData = await getData(defaultSeries);
 
 export type ViewMode = 'side-by-side' | 'animated' | 'free' | 'pivot';
 
+// These are my favourite variants. Change as wanted.
+const favouriteVariants = [0, 12, 25, 26, 27, 35, 44, 77, 90];
+
 interface CaptureContext {
     camera  : THREE.Camera;
     scene   : THREE.Scene;
@@ -86,6 +89,7 @@ interface Store {
     randomPlaying?  : number;
     randomPlay      : () => void;
     exportSampler   : () => void;
+    preloadTextures : () => Promise<void>;
 
     // Active Variant
     variant         : Variant;
@@ -320,7 +324,7 @@ const useStore = create<Store>((set, get) => {
         setCapture (capture) { set({ capture })},
 
         async saveStatic() {
-            await delay(3000);
+            await delay(1500);
             const viewmode = get().viewMode;
             get().setViewMode('side-by-side');
             const capture = get().capture;
@@ -345,22 +349,18 @@ const useStore = create<Store>((set, get) => {
                 1.0
             )
             capture.gl.domElement.getContext('webgl', { preserveDrawingBuffer: false });
-            await delay(500);
+            await delay(1500);
         },
 
         async saveAllStatic () {
-            const variants = get().variants;
-            const setVariant = get().setVariant;
-            const capture = get().capture;
+            const { variants, setVariant, capture, preloadTextures } = get();
 
             if (!capture) {
                 console.error(`Can't capture, no rendering context.`);
                 return;
             }
 
-            // Run through each texture once to make sure they're all loaded.
-            for (const back of backs) { await delay(100); set({ back }) };
-            for (const border of borders) { await delay(100); set({ border }) };
+            await preloadTextures();
 
             for (const variant of variants) {
                 setVariant(variant);
@@ -389,18 +389,71 @@ const useStore = create<Store>((set, get) => {
             set({ randomPlaying : i });
         },
 
-        async exportSampler () {
+        // Export a video of the card pivoting and flipping in place.
+        async exportPivot () {
+            const { setVariant, variants, capture } = get();
+            const fps = 24;
+
+            const frames = fps * favouriteVariants.length * 24;
+
+            const start = new Date();
+            console.log(`${start.toLocaleTimeString()} Rendering ${frames} frames...`);
+            
+            const capturer = new WebMWriter({
+                quality: 1,
+                frameRate: 30,
+            });
+
+            i = -60 * 8;
+
+            set({ exporting: true, viewMode: 'pivot' });
+
+            function render () {
+                i += 1;
+                if (!capture) {
+                    console.error(`Can't capture, no rendering context.`);
+                    return;
+                }
+
+                capture.gl.render(capture.scene, capture.camera);
+                capturer.addFrame(capture.gl.domElement);
+
+                if (i < frames) {
+                    requestAnimationFrame(render);
+                } else {
+                    capturer.complete()
+                    .then(function(blob : any) {
+                        download(blob, 'pivot', 'video/webm');
+                    });
+                    console.log(`Done. Took ${(new Date().getTime() - start.getTime()) / 1000} seconds.`)
+                    set({ rotation : undefined, exporting: false, });
+                    if (resolver) resolver();
+                };
+            };
+
+            for (const variant of favouriteVariants) {
+                setVariant(variants[variant]);
+                requestAnimationFrame(render);
+            };
+        },
+
+        async preloadTextures () {
             // Run through each texture once to make sure they're all loaded.
             for (const back of backs) { await delay(100); set({ back }) };
             for (const border of borders) { await delay(100); set({ border }) };
+            for (const mask of masks) { await delay(100); set({ mask }) };
+        },
+
+        async exportSampler () {
+            const { capture, variants, setVariant, preloadTextures } = get();
+
+            await preloadTextures();
 
             const frames = 60 * 12;
-            const variants = get().variants;
 
-            const variant = variants[Math.floor(variants.length * Math.random())];
-            get().setVariant(variant);
+            const variant = variants[favouriteVariants[0]];
+            setVariant(variant);
 
-            const capture = get().capture;
             if (!capture) {
                 console.error(`Can't capture, no rendering context.`);
                 return;
@@ -415,17 +468,19 @@ const useStore = create<Store>((set, get) => {
             });
 
             i = -60 * 8;
+            let j = 0;
 
-            set({ exporting: true, viewMode: 'animated' });
+            set({ exporting: true, viewMode: 'animated', variant: variants[favouriteVariants[0]] });
             
             function render () {
                 if (!capture) {
                     console.error(`Can't capture, no rendering context.`);
                     return;
                 };
-                if (i > 0 && i % 90 === 0) {
-                    const variant = variants[Math.floor(variants.length * Math.random())];
-                    get().setVariant(variant);
+                if (i > 0 && i % 180 === 0) {
+                    j++;
+                    const variant = variants[favouriteVariants[j]];
+                    setVariant(variant);
                 };
                 set({ rotation: [0, -((i / (frames / 4)) * Math.PI * 2) % (Math.PI * 2) + Math.PI, 0] });
                 capture.gl.render(capture.scene, capture.camera);
@@ -503,18 +558,14 @@ const useStore = create<Store>((set, get) => {
         },
 
         async saveAllAnimated () {
-            const capture = get().capture;
-            const variants = get().variants;
-            const setVariant = get().setVariant;
+            const { capture, variants, setVariant, preloadTextures } = get();
 
             if (!capture) {
                 console.error(`Can't capture, no rendering context.`);
                 return;
             }
 
-            // Run through each texture once to make sure they're all loaded.
-            for (const back of backs) { await delay(100); set({ back }) };
-            for (const border of borders) { await delay(100); set({ border }) };
+            await preloadTextures()
 
             for (const variant of variants) {
                 setVariant(variant);

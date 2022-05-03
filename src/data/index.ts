@@ -201,7 +201,45 @@ export const stocks = function () {
 export function saveData(series: SeriesIdentifier): void { };
 
 function randomBack () {
-    return slug(backs[Math.floor(Math.random() * backs.length)].name);
+
+    const tiers = {
+        "t1": {
+            "pct": 90,
+            "options": [
+                'fate',
+                'saxon',
+                'saxon-bordered',
+                'saxon-worn',
+                'compass',
+                'helmet',
+                'knotwork-moon',
+                'knotwork-ravens',
+                'odal-rune',
+                'raven-outline',
+                'raven-solid',
+                'swords',
+                'wyrd',
+                'oath-rings-inverted',
+                'oath-rings',
+                'cup-extra',
+                'cup-wider',
+                'cups',
+            ],
+        },
+        "t2": {
+            "pct": 10,
+            "options": [
+                'cinematic',
+                'cup-inverted',
+            ]
+        },
+    };
+
+    if (Math.random() * 100 <= tiers.t2.pct) {
+        return slug(tiers.t2.options[Math.floor(Math.random() * tiers.t2.options.length)]);
+    } else {
+        return slug(tiers.t1.options[Math.floor(Math.random() * tiers.t1.options.length)]);
+    }
 };
 
 function randomBorder () {
@@ -288,6 +326,20 @@ export function generate(
         }
     };
 
+    // const masks = {
+    //     "t1": {
+    //         "pct": 100,
+    //         "options": [
+    //             "line",
+    //             "cinematic",
+    //             "greek",
+    //             "round",
+    //             "birka",
+    //             "haus",
+    //         ]
+    //     }
+    // };
+
     function randomStock () {
         const k = Object.keys(stocks).sort();
         const m = k.reduce((x, y) => Number(y) > x ? Number(y) : x, 0)
@@ -332,7 +384,7 @@ export function generate(
     return variants
 };
 
-console.log(dumpCsv(VariantRow, generate(110, 'empress')));
+console.log(dumpCsv(VariantRow, generate(110, 'emperor')));
 
 export function generateFileName (
     variant : Variant,
