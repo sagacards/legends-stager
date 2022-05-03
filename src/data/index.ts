@@ -115,8 +115,8 @@ export function dumpManifest(
     variants : Variant[],
 ) {
     return [
-        ...variants.map(v => `preview-animated-${generateFileName(v)}.webm,Animated Preview,preview animated back-${slug(v.back)} border-${slug(v.border)} ink-${slug(v.ink)} stock-${slug(v.stock)} mask-${v.mask ? slug(v.mask) : 'none'},An animated preview,video/webm`),
-        ...variants.map(v => `preview-side-by-side-${generateFileName(v)}.webp,Side By Side Preview,preview side-by-side back-${slug(v.back)} border-${slug(v.border)} ink-${slug(v.ink)} stock-${slug(v.stock)} mask-${v.mask ? slug(v.mask) : 'none'},A side-by-side preview,image/webp`),
+        ...variants.map(v => `preview-animated-${generateFileName(v)}.webm,Animated Preview,preview animated back-${slug(v.back)} border-${slug(v.border)} ink-${slug(v.ink)} stock-${slug(v.stock)} ${v.mask ? slug(v.mask) : 'none'},An animated preview,video/webm`),
+        ...variants.map(v => `preview-side-by-side-${generateFileName(v)}.webp,Side By Side Preview,preview side-by-side back-${slug(v.back)} border-${slug(v.border)} ink-${slug(v.ink)} stock-${slug(v.stock)} ${v.mask ? slug(v.mask) : 'none'},A side-by-side preview,image/webp`),
     ].join('\n');
 };
 
