@@ -15,7 +15,7 @@ const defaultSeriesData = await getData(defaultSeries);
 export type ViewMode = 'side-by-side' | 'animated' | 'free' | 'pivot';
 
 // These are my favourite variants. Change as wanted.
-const favouriteVariants = [0, 12, 25, 26, 27, 35, 44, 77, 90];
+const favouriteVariants = [2, 5, 8, 14, 17, 18, 23, 25, 38];
 
 interface CaptureContext {
     camera  : THREE.Camera;

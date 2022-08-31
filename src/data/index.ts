@@ -209,7 +209,7 @@ function randomBack () {
                 'fate',
                 'saxon',
                 'saxon-bordered',
-                'saxon-worn',
+                'worn-saxon',
                 'compass',
                 'helmet',
                 'knotwork-moon',
@@ -384,7 +384,7 @@ export function generate(
     return variants
 };
 
-console.log(dumpCsv(VariantRow, generate(110, 'emperor')));
+console.log(dumpCsv(VariantRow, generate(110, 'hermit')));
 
 export function generateFileName (
     variant : Variant,

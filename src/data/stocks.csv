@@ -9,14 +9,14 @@ emperor,#4e0303,#000,#000,standard
 emperor-gloss,#4e0303,#4e0303,#000000,phong
 hierophant,#4e1e05,#000,#000,standard
 hierophant-gloss,#4e1e05,#3b2504,#000000,phong
-lovers,#ffce53,#000000,#000000,standard
-lovers-gloss,#d6a100,#000,#000,phong
+lovers,#ffbf00,#ffb700,#000000,standard
+lovers-gloss,#d6a100,#d6a100,#000000,phong
 chariot,#05113e,#000,#000,standard
 chariot-gloss,#05113e,#000,#000,phong
 strength,#cb5114,#000000,#000000,standard
 strength-gloss,#cb5114,#692f00,#000000,phong
 hermit,#0f1927,#000,#000,standard
-hermit-gloss,#0f1927,#000,#000,phong
+hermit-gloss,#0f1927,#0f1927,#000000,phong
 fortune,#2b5847,#000000,#000000,standard
 fortune-gloss,#2b5847,#10474e,#0d191a,phong
 justice,#31050d,#000,#000,standard
